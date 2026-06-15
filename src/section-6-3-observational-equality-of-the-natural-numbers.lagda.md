@@ -35,8 +35,8 @@ We define the **observational equality** of `ℕ` as binary relation
 `Eq-ℕ : ℕ → (ℕ → 𝕌₀)` satisfying
 
 ```text
-  Eq-ℕ(0, 0)             ≐ 𝟙      Eq-ℕ(succ(n), 0)       ≐ ∅
-  Eq-ℕ(0, succ(n))       ≐ ∅      Eq-ℕ(succ(n), succ(m)) ≐ Eq-ℕ(n, m).
+  Eq-ℕ(0, 0)       ≐ 𝟙      Eq-ℕ(succ(n), 0)       ≐ ∅
+  Eq-ℕ(0, succ(n)) ≐ ∅      Eq-ℕ(succ(n), succ(m)) ≐ Eq-ℕ(n, m).
 ```
 
 ```agda
