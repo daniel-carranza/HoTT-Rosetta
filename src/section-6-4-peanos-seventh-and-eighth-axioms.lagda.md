@@ -50,14 +50,13 @@ ap-succ-ℕ = ap succ-ℕ
 The direction of interest is the converse, which asserts that the successor
 function is injective.
 
-Here we use the proposition that `(m = n) ↔ EqN(m, n)` for all `m, n : ℕ`.
-Furthermore, we have `EqN(succ(m), succ(n)) ≐ EqN(m, n)`.
+Here we use the proposition that `(m = n) ↔ Eq-ℕ(m, n)` for all `m, n : ℕ`.
+Furthermore, we have `Eq-ℕ(succ(m), succ(n)) ≐ Eq-ℕ(m, n)`.
 Therefore, we define the function `(succ(m) = succ(n)) → (m = n)` as the
 composite of the maps
 
 ```text
-  (succ(m) = succ(n)) → EqN(succ(m), succ(n)) →
-  EqN(m, n) → (m = n).
+  (succ(m) = succ(n)) → Eq-ℕ(succ(m), succ(n)) → Eq-ℕ(m, n) → (m = n).
 ```
 
 ```agda
