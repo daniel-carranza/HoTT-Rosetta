@@ -39,14 +39,6 @@ We define the **observational equality** of `ℕ` as binary relation
   Eq-ℕ(0, succ(n)) ≐ ∅      Eq-ℕ(succ(n), succ(m)) ≐ Eq-ℕ(n, m).
 ```
 
-```agda
-Eq-ℕ : ℕ → ℕ → UU lzero
-Eq-ℕ zero-ℕ zero-ℕ = unit
-Eq-ℕ zero-ℕ (succ-ℕ n) = empty
-Eq-ℕ (succ-ℕ m) zero-ℕ = empty
-Eq-ℕ (succ-ℕ m) (succ-ℕ n) = Eq-ℕ m n
-```
-
 ## Construction
 
 We define `Eq-ℕ` by double induction on `ℕ`.
@@ -66,8 +58,7 @@ The resulting family `E₀` satisfies
   E₀(succ(n)) ≐ ∅.
 ```
 
-We define `Eₛ` by induction, taking `Eₛ₀ := ∅` and
-`Eₛₛ(n, X, m) := X(m)`.
+We define `Eₛ` by induction, taking `Eₛ₀ := ∅` and `Eₛₛ(n, X, m) := X(m)`.
 The resulting family `Eₛ` satisfies
 
 ```text
@@ -85,6 +76,14 @@ judgmental equality
 
 holds, from which the judgmental equalities in the statement of the definition
 follow.
+
+```agda
+Eq-ℕ : ℕ → ℕ → UU lzero
+Eq-ℕ zero-ℕ zero-ℕ = unit
+Eq-ℕ zero-ℕ (succ-ℕ n) = empty
+Eq-ℕ (succ-ℕ m) zero-ℕ = empty
+Eq-ℕ (succ-ℕ m) (succ-ℕ n) = Eq-ℕ m n
+```
 
 The observational equality of the natural numbers is important because it can be
 used to prove equalities and negations of equalities.
@@ -141,8 +140,7 @@ Then we can define a function
 as the composite
 
 ```text
-  Eq-ℕ(succ(m), succ(n)) → Eq-ℕ(m, n) → (m = n) →
-  (succ(m) = succ(n)).
+  Eq-ℕ(succ(m), succ(n)) → Eq-ℕ(m, n) → (m = n) → (succ(m) = succ(n)).
 ```
 
 Note that the map on the left is the identity function, because we have the
@@ -160,6 +158,5 @@ eq-Eq-ℕ (succ-ℕ x) (succ-ℕ y) e = ap succ-ℕ (eq-Eq-ℕ x y e)
 
 ## Agda-unimath sources
 
-- The code above is copied from
-  `elementary-number-theory.equality-natural-numbers`.
-  The upstream name `Eq-ℕ` corresponds to the book notation `Eq-ℕ`.
+- The code above is copied from `elementary-number-theory.equality-natural-numbers`.
+The upstream name `Eq-ℕ` corresponds to the book notation `Eq-ℕ`.
