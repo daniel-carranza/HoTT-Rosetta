@@ -2,6 +2,17 @@
 
 ```agda
 module section-7-2-the-congruence-relations-on-natural-numbers where
+
+open import universe-levels
+open import section-3-1-the-formal-specification-of-the-type-of-natural-numbers
+open import section-4-4-coproducts
+open import section-4-6-dependent-pair-types
+open import section-5-1-the-inductive-definition-of-identity-types
+open import section-5-2-the-groupoidal-structure-of-types
+open import exercise-5-5-semiring-laws-natural-numbers
+open import exercise-6-5-distance-natural-numbers
+open import section-7-1-the-curry-howard-interpretation
+open import exercise-7-1-divisibility-three-for-two
 ```
 
 Relations in the Curry-Howard interpretation of logic into type theory are also
@@ -15,11 +26,26 @@ Such relations are sometimes called *typal*.
 Consider a type `A`.
 A **(typal) binary relation** on `A` is defined to be a family of types
 `R(x, y)` indexed by `x, y : A`.
+
+```agda
+Relation : {l1 : Level} (l : Level) (A : Type l1) → Type (l1 ⊔ lsuc l)
+Relation l A = A → A → Type l
+```
+
 Given a binary relation `R` on `A`, we say that `R` is **reflexive** if it comes
 equipped with
 
 ```text
   ρ : Π(x : A) R(x, x),
+```
+
+```agda
+module _
+  {l1 l2 : Level} {A : Type l1} (R : Relation l2 A)
+  where
+
+  is-reflexive : Type (l1 ⊔ l2)
+  is-reflexive = (x : A) → R x x
 ```
 
 we say that `R` is **symmetric** if it comes equipped with
@@ -28,14 +54,46 @@ we say that `R` is **symmetric** if it comes equipped with
   σ : Π(x y : A) R(x, y) → R(y, x),
 ```
 
+```agda
+module _
+  {l1 l2 : Level} {A : Type l1} (R : Relation l2 A)
+  where
+
+  is-symmetric : Type (l1 ⊔ l2)
+  is-symmetric = (x y : A) → R x y → R y x
+```
+
 and we say that `R` is **transitive** if it comes equipped with
 
 ```text
   τ : Π(x y z : A) R(x, y) → (R(y, z) → R(x, z)).
 ```
 
+```agda
+module _
+  {l1 l2 : Level} {A : Type l1} (R : Relation l2 A)
+  where
+
+  is-transitive : Type (l1 ⊔ l2)
+  is-transitive = (x y z : A) → R y z → R x y → R x z
+```
+
 A **(typal) equivalence relation** on `A` is a reflexive, symmetric, and
 transitive binary typal relation on `A`.
+
+TODO: In agda-unimath, equivalence relations are only defined for relations _valued in propositions_
+```agda
+is-equivalence-relation :
+  {l1 l2 : Level} {A : Type l1} (R : Relation l2 A) → Type (l1 ⊔ l2)
+is-equivalence-relation R =
+  is-reflexive R ×
+  is-symmetric R ×
+  is-transitive R
+
+equivalence-relation :
+  (l : Level) {l1 : Level} (A : Type l1) → Type (lsuc l ⊔ l1)
+equivalence-relation l A = Σ (Relation l A) is-equivalence-relation
+```
 
 To define the congruence relation modulo `k` in type theory using the
 Curry-Howard interpretation, we will define for any three natural numbers `x`,
@@ -67,6 +125,12 @@ element of type
   x ≡ y mod k := k | dist-ℕ(x, y).
 ```
 
+```agda
+cong-ℕ :
+  ℕ → ℕ → ℕ → Type lzero
+cong-ℕ k x y = div-ℕ k (dist-ℕ x y)
+```
+
 ## Example 7.2.3
 
 For example, `k ≡ 0 mod k`.
@@ -77,6 +141,14 @@ identification `p : kl = k`.
 Of course, we choose `l := 1`, and the equation `k1 = k` holds by the right unit
 law for multiplication on `ℕ`, which was shown in Exercise 5.5.
 
+```agda
+cong-zero-ℕ :
+  (k : ℕ) → cong-ℕ k k zero-ℕ
+pr1 (cong-zero-ℕ k) = 1
+pr2 (cong-zero-ℕ k) =
+  (left-unit-law-mul-ℕ k) ∙ (inv (right-unit-law-dist-ℕ k))
+```
+
 ## Proposition 7.2.4
 
 For each `k : ℕ`, the congruence relation modulo `k` is an equivalence
@@ -86,8 +158,22 @@ relation.
 
 Reflexivity follows from the fact that `dist-ℕ(x, x) = 0`, and any number
 divides `0`.
+
+```agda
+refl-cong-ℕ : (k : ℕ) → is-reflexive (cong-ℕ k)
+pr1 (refl-cong-ℕ k x) = zero-ℕ
+pr2 (refl-cong-ℕ k x) =
+  (left-zero-law-mul-ℕ (succ-ℕ k)) ∙ (inv (dist-eq-ℕ x x refl))
+```
+
 Symmetry follows from the fact that `dist-ℕ(x, y) = dist-ℕ(y, x)` for any two
 natural numbers `x` and `y`.
+
+```agda
+symmetric-cong-ℕ : (k : ℕ) → is-symmetric (cong-ℕ k)
+pr1 (symmetric-cong-ℕ k x y (pair d p)) = d
+pr2 (symmetric-cong-ℕ k x y (pair d p)) = p ∙ (commutative-dist-ℕ x y)
+```
 
 The non-trivial part of the claim is therefore transitivity.
 Here we use the fact that for any three natural numbers `x`, `y`, and `z`, at
@@ -112,3 +198,22 @@ in which `x`, `y`, and `z` can be ordered:
 Therefore it follows by the triangle-equality characterization for `dist-ℕ` and
 Proposition 7.1.5 that `k | dist-ℕ(x, z)` if `k | dist-ℕ(x, y)` and
 `k | dist-ℕ(y, z)`.
+
+```agda
+transitive-cong-ℕ : (k : ℕ) → is-transitive (cong-ℕ k)
+transitive-cong-ℕ k x y z e d with is-total-dist-ℕ x y z
+transitive-cong-ℕ k x y z e d | inl α =
+  concatenate-div-eq-ℕ (div-add-ℕ k (dist-ℕ x y) (dist-ℕ y z) d e) α
+transitive-cong-ℕ k x y z e d | inr (inl α) =
+  div-right-summand-ℕ k (dist-ℕ y z) (dist-ℕ x z) e
+    ( concatenate-div-eq-ℕ d (inv α))
+transitive-cong-ℕ k x y z e d | inr (inr α) =
+  div-left-summand-ℕ k (dist-ℕ x z) (dist-ℕ x y) d
+    ( concatenate-div-eq-ℕ e (inv α))
+```
+
+## Agda-unimath sources
+
+- The definition of binary relations, reflexivity, symmetry, and transitivity, are given in `foundation.binary-relations`.
+- The definition of an equivalence relation is given in `foundation-core.equivalence-relations`.
+- The definition of the congruance relation, with its related facts, is given in `elementary-number-theory.congruence-natural-numbers`.

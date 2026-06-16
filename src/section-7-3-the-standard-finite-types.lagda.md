@@ -2,6 +2,17 @@
 
 ```agda
 module section-7-3-the-standard-finite-types where
+
+open import universe-levels
+open import section-3-1-the-formal-specification-of-the-type-of-natural-numbers
+open import section-4-2-the-unit-type
+open import section-4-3-the-empty-type
+open import section-4-4-coproducts
+open import section-4-6-dependent-pair-types
+open import section-5-1-the-inductive-definition-of-identity-types
+open import section-5-2-the-groupoidal-structure-of-types
+open import section-5-3-the-action-on-identifications-of-functions
+open import exercise-6-4-strict-order-natural-numbers
 ```
 
 The standard finite sets are classically defined as the sets
@@ -41,6 +52,11 @@ standard finite types is
   classical-Fin_k := Σ(x : ℕ) x < k.
 ```
 
+```agda
+classical-Fin : ℕ → Type lzero
+classical-Fin k = Σ ℕ (λ x → le-ℕ x k)
+```
+
 This is a perfectly fine definition of the standard finite types.
 However, the usual definition of the standard finite types in Martin-Löf's
 dependent type theory is a more direct, recursive definition, which takes full
@@ -56,8 +72,22 @@ recursively by
   Fin(k + 1) := Fin(k) + 𝟙.
 ```
 
+TODO: This differs slightly from the code in agda-unimath, in which the finite types are defined as *sets* first, then cast to types.
+```agda
+Fin : ℕ → Type lzero
+Fin zero-ℕ = empty
+Fin (succ-ℕ n) = Fin n + unit
+```
+
 We will write `i` for the inclusion `inl : Fin(k) → Fin(k + 1)` and we will
 write `⋆` for the point `inr(⋆)`.
+
+TODO: Not sure if this should be included here? In particular, there's no analogous code for the inclusion of the point...
+```agda
+inl-Fin :
+  (k : ℕ) → Fin k → Fin (succ-ℕ k)
+inl-Fin k = inl
+```
 
 In Exercise 7.7 you will be asked to show that the types `classical-Fin_k` and
 `Fin(k)` are isomorphic.
@@ -85,6 +115,7 @@ In other words, we can define a dependent function
 ```
 
 for each `k : ℕ`.
+
 The function `f` defined in this way then satisfies the judgmental equalities
 
 ```text
@@ -98,6 +129,16 @@ we may also present such inductive definitions by pattern matching:
 ```text
   f_(k + 1)(i(x)) := g_k(x, f_k(x))
   f_(k + 1)(⋆)    := p_k.
+```
+
+TODO: This code was manually supplied - is there a source for this in agda-unimath? Do we want this at all?
+```agda
+ind-Fin : 
+  {i : Level} {P : (k : ℕ) → Fin k → Type i} → 
+  ({k : ℕ} (x : Fin k) → P k x → P (succ-ℕ k) (inl-Fin k x)) → 
+  ({k : ℕ} → P (succ-ℕ k) (inr star)) → ({k : ℕ} (x : Fin k) → P k x)
+ind-Fin g p {succ-ℕ k} (inl x) = g {k} x (ind-Fin g p {k} x)
+ind-Fin g p {succ-ℕ k} (inr star) = p {k}
 ```
 
 We will often use definitions by pattern matching for two reasons: such
@@ -121,6 +162,12 @@ We define the inclusion `nat-Fin_k : Fin(k) → ℕ` inductively by
   nat-Fin_(k + 1)(⋆)    := k.
 ```
 
+```agda
+nat-Fin : (k : ℕ) → Fin k → ℕ
+nat-Fin (succ-ℕ k) (inl x) = nat-Fin k x
+nat-Fin (succ-ℕ k) (inr x) = k
+```
+
 ## Lemma 7.3.5
 
 The function `nat-Fin : Fin(k) → ℕ` is bounded, in the sense that
@@ -136,6 +183,19 @@ holds by the inductive hypothesis, and we also have
 
 ```text
   nat-Fin_(k + 1)(⋆) ≐ k < k + 1.
+```
+
+```agda
+strict-upper-bound-nat-Fin : (k : ℕ) (x : Fin k) → le-ℕ (nat-Fin k x) k
+strict-upper-bound-nat-Fin (succ-ℕ k) (inl x) =
+  transitive-le-ℕ
+    ( nat-Fin k x)
+    ( k)
+    ( succ-ℕ k)
+    ( strict-upper-bound-nat-Fin k x)
+    ( succ-le-ℕ k)
+strict-upper-bound-nat-Fin (succ-ℕ k) (inr star) =
+  succ-le-ℕ k
 ```
 
 ## Proposition 7.3.6
@@ -164,3 +224,24 @@ Here
 are obtained from the fact that
 `nat-Fin_(k + 1)(i(z)) ≐ nat-Fin_k(z) < k` for any `z : Fin(k)`, and the fact
 that `nat-Fin_(k + 1)(⋆) ≐ k`.
+
+TODO: At this point in the text, the definition of `is-injective` should really be given a proper place and imported - it's used multiple times before this, I think
+```agda
+is-injective : {l1 l2 : Level} {A : Type l1} {B : Type l2} → (A → B) → Type (l1 ⊔ l2)
+is-injective {l1} {l2} {A} {B} f = {x y : A} → f x ＝ f y → x ＝ y
+
+is-injective-nat-Fin : (k : ℕ) → is-injective (nat-Fin k)
+is-injective-nat-Fin (succ-ℕ k) {inl x} {inl y} p =
+  ap inl (is-injective-nat-Fin k p)
+is-injective-nat-Fin (succ-ℕ k) {inl x} {inr star} p =
+  ex-falso (neq-le-ℕ (strict-upper-bound-nat-Fin k x) p)
+is-injective-nat-Fin (succ-ℕ k) {inr star} {inl y} p =
+  ex-falso (neq-le-ℕ (strict-upper-bound-nat-Fin k y) (inv p))
+is-injective-nat-Fin (succ-ℕ k) {inr star} {inr star} p =
+  refl
+```
+
+## Agda-unimath sources
+
+- The definition of the classical finite types is given in `univalent-combinatorics.classical-finite-types`.
+- The definition of the standard finite types is given in `univalent-combinatorics.standard-finite-types`. 

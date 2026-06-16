@@ -2,6 +2,16 @@
 
 ```agda
 module section-7-1-the-curry-howard-interpretation where
+
+open import universe-levels
+open import section-3-1-the-formal-specification-of-the-type-of-natural-numbers
+open import section-3-2-addition-on-the-natural-numbers
+open import exercise-3-1-multiplication-and-exponentiation
+open import section-4-6-dependent-pair-types
+open import section-5-1-the-inductive-definition-of-identity-types
+open import section-5-2-the-groupoidal-structure-of-types
+open import section-5-3-the-action-on-identifications-of-functions
+open import exercise-5-5-semiring-laws-natural-numbers
 ```
 
 The *Curry-Howard interpretation* is an interpretation of logic into type
@@ -41,6 +51,13 @@ We say that `d` **divides** `n` if there is an element of type
 
 ```text
   d | n := Σ(k : ℕ) d · k = n.
+```
+
+TODO: This code is copied from the agda-unimath library, which defines the multiplication in the opposite order from the textbook (k * m as opposed to m * k)
+      This results in the proof later in this file being slightly different from the textbook proof (which is also different from the agda-unimath library, see there)
+```agda
+div-ℕ : ℕ → ℕ → Type lzero
+div-ℕ m n = Σ ℕ (λ k → k *ℕ m ＝ n)
 ```
 
 ## Remark 7.1.3
@@ -85,11 +102,25 @@ Such an element `p(x)` is constructed as the pair `(x, q(x))`, where the
 identification `q(x) : 1 · x = x` is obtained from the left unit law of
 multiplication on `ℕ`, which was constructed in Exercise 5.5.
 
+```agda
+div-one-ℕ :
+  (x : ℕ) → div-ℕ 1 x
+pr1 (div-one-ℕ x) = x
+pr2 (div-one-ℕ x) = right-unit-law-mul-ℕ x
+```
+
 Similarly, the type theoretic proof that every natural number `k` divides `0`,
 i.e., that `k | 0`, is the pair `(0, p)` consisting of the natural number `0`
 and the identification `p : k · 0 = 0` obtained from the right annihilation law
 of multiplication on `ℕ`.
 This identification was also constructed in Exercise 5.5.
+
+```agda
+div-zero-ℕ :
+  (k : ℕ) → div-ℕ k 0
+pr1 (div-zero-ℕ k) = 0
+pr2 (div-zero-ℕ k) = left-zero-law-mul-ℕ k
+```
 
 In the following proposition we will see examples of how a hypothesis of type
 `d | x` can be used.
@@ -149,6 +180,18 @@ To conclude the proof that `d | x + y`, note that we have constructed the pair
   (k + l, α ∙ (β ∙ γ)) : Σ(k : ℕ) d · k = x + y.
 ```
 
+TODO: The agda-unimath library uses a dedicated function `ap-add-ℕ`, which they define using `ap-binary` for functions in two variables.
+      This code attempts to follow the proof laid out in this text (subject to the caveat that multiplication is performed the other way, see earlier TODO)
+```agda
+div-add-ℕ :
+  (d x y : ℕ) → div-ℕ d x → div-ℕ d y → div-ℕ d (x +ℕ y)
+pr1 (div-add-ℕ d x y (pair n p) (pair m q)) = n +ℕ m
+pr2 (div-add-ℕ d x y (pair n p) (pair m q)) =
+  ( right-distributive-mul-add-ℕ n m d) ∙
+  (( ap (λ t → t +ℕ (m *ℕ d)) p) ∙
+  ( ap (λ t → x +ℕ t) q))
+```
+
 The full Curry-Howard interpretation of logic into type theory also involves
 interpretations of disjunction, conjunction, implication, and equality.
 
@@ -202,13 +245,17 @@ One important difference is that types may contain many elements, whereas in
 logic, propositions are usually considered to be *proof irrelevant*.
 This means that to establish the truth of a proposition it only matters
 *whether* it can be proven, not in how many different ways it can be proven.
-To address this dissimilarity between general types and logic, we will introduce
-in the part on univalent foundations a more refined way of interpreting logic
-into type theory.
-In the chapter on propositions, sets, and the higher truncation levels we will
+To address this dissimilarity between general types and logic, we will introduce 
+a more refined way of interpreting logic into type theory in the chapter on 
+univalent foundations.
+In the section on propositions, sets, and the higher truncation levels, we will
 define the type `is-prop(A)`, which expresses the property that the type `A` is
 a proposition.
 Furthermore, we will introduce the *propositional truncation* operation in the
-chapter on propositional truncations, which we will use to interpret logic into
+section on propositional truncations, which we will use to interpret logic into
 type theory in such a way that all logical assertions are interpreted as types
 that satisfy the condition of being a proposition.
+
+## Agda-unimath sources
+
+- The definition of divisibility, together with the above proof, is given in `elementary-number-theory.divisibility-natural-numbers`.
