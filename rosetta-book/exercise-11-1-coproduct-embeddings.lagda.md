@@ -1,0 +1,24 @@
+# Exercise 11.1
+
+```agda
+module exercise-11-1-coproduct-embeddings where
+
+```
+
+## Problem statement
+
+<div class="subexenum">
+
+Show that the map `empty→ A` is an embedding for every type `A`.
+
+Show that `inl:A→ A+B` and `inr:B→ A+B` are embeddings for any two types `A` and `B`.
+
+Show that `inl:A→ A+B` is an equivalence if and only if `B` is empty, and that `inr : B → A+B` is an equivalence if and only if `A` is empty.
+
+</div>
+
+## Solution
+
+<!-- rosetta-item: exercise-11-1 -->
+
+No formalization has been curated yet.

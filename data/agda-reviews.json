@@ -1,0 +1,253 @@
+{
+  "blocks": {
+    "definition-7.4.1-split-surjective-adapted": {
+      "comments": [],
+      "review_sha256": "ef5770f820629d4219d2cc06543be4ebd87884acf9ef0c571262560f43f44e4a",
+      "state": "approved"
+    },
+    "definition-8.1.1-decidable": {
+      "comments": [],
+      "review_sha256": "f52df8e657a80dd0749647bb34942878b6a5cbb56dc33f77f01edde659c90cd7",
+      "state": "approved"
+    },
+    "example-8.1.2-unit-empty-decidable": {
+      "comments": [],
+      "review_sha256": "929ec79c1a397d61a7edfe0f6c4974e8ce89c782eacea96c9dd724bdfa7f927f",
+      "state": "approved"
+    },
+    "example-8.1.3-coproduct-decidable": {
+      "comments": [],
+      "review_sha256": "2b1cdb8d461d6922984d4f167c155110825118b47e8d67e5fb849ffc2fb634c2",
+      "state": "approved"
+    },
+    "exercise-7-1-divisibility-three-for-two-block-1": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This solution was needed for a later section. Please complete this file with the appropriate code review and prose."
+        }
+      ],
+      "state": "pending"
+    },
+    "lemma-8.1.6-inverse-logical-equivalence": {
+      "comments": [],
+      "review_sha256": "fa0b0ec44035ee2715a0c1983091671a3eceb306c2aa041b01c2e025ab28a82b",
+      "state": "approved"
+    },
+    "missing-agda-exercise-7-9-euclidean-division-exercise-7-9-b": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide marks Exercise 7.9(b) as TODO. The module elementary-number-theory.euclidean-division-natural-numbers provides euclidean-division-ℕ and its quotient, remainder, equation, and remainder bound, but no result proving uniqueness for arbitrary bounded quotient-and-remainder decompositions."
+        }
+      ],
+      "review_sha256": "679307f2c43b977c7182b16d813a72055529ad51383210ae786031cbf4b80c76",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-10-maximal-elements-exercise-8-10": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide marks Exercise 8.10 TODO. The greatest-common-divisor module defines is-gcd-ℕ and gcd-ℕ, but not the requested construction as a maximal common divisor."
+        }
+      ],
+      "review_sha256": "81f4eeadabf18aa637f5f37995303661ce0640bb322b0cd8a6878a23c1874598",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-11-bezouts-identity-exercise-8-11": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Closest match: elementary-number-theory/bezouts-lemma-natural-numbers. The relevant exact ranges are preserved as blocked candidates; they require the upstream integer modular-arithmetic and minimal-positive-distance chain."
+        }
+      ],
+      "review_sha256": "56bdc7a7d99bc17a9c83a18aedb23df03a2c14f73f7a8cf2e69c2de8b9bc794e",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-12-prime-factorization-exercise-8-12": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Closest match: elementary-number-theory/fundamental-theorem-of-arithmetic. Exact result ranges are preserved as blocked candidates; their list, strong-induction, and prime-factorization dependencies are not locally available here."
+        }
+      ],
+      "review_sha256": "ce51a78cd7e984b989c45192db0dbc357fc7afbd063734f181973fd36a496e6d",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-13-primes-congruent-three-mod-four-exercise-8-13": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide marks Exercise 8.13 TODO; infinitude-of-primes proves unbounded primes without the required congruence modulo 4."
+        }
+      ],
+      "review_sha256": "77ae75c2ec7cc004b2f8ca22bb913d85396cc39655d6816c659e340399a9156e",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-14-fields-integers-modulo-prime-exercise-8-14": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide marks Exercise 8.14 TODO. Existing modular-arithmetic code supplies finite cyclic rings, but no applicable proof that the prime case is a field."
+        }
+      ],
+      "review_sha256": "13df994f0ce14ebed398c39aa98fd4d52fd7d5560c7070cc5943ab809ec47252",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-15-cofibonacci-sequence-exercise-8-15-a": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Closest match: elementary-number-theory/cofibonacci. Exact/adapted construction ranges are preserved as blocked candidates; they depend on the upstream Pisano-period and Fibonacci-divisibility developments."
+        }
+      ],
+      "review_sha256": "9424a513b128448ad9af86ff85d463ce387b000dd5571dd3fb65e0ab390ef2f9",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-15-cofibonacci-sequence-exercise-8-15-b": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide supplies cofibonacci and forward-is-left-adjoint-cofibonacci, but explicitly leaves the backward direction TODO."
+        }
+      ],
+      "review_sha256": "484bb42d6457a35352d7b73dcc1b88f244ec86a8e7484b56d24ecd0c75368b52",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-5-characterization-prime-exercise-8-5": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide marks Exercise 8.5 TODO and records no applicable source for this alternative prime characterization."
+        }
+      ],
+      "review_sha256": "dcf191b6b10dbd0a71888ab1e43f18d1f12fa81e0e40b5ce19380fc8baa0d30f",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-8-decidable-equality-sigma-types-exercise-8-8": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Closest match: foundation/decidable-equality (dependent-sum equality). Its current proof depends on the equivalence framework introduced after Chapter 8; the exact source ranges are preserved as blocked candidates."
+        }
+      ],
+      "review_sha256": "459167c471b2014398821ca59a8233786fc175db963761c0d9c73f5af0f9abd5",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-9-finite-dependent-products-exercise-8-9-a": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Closest match: univalent-combinatorics/decidable-dependent-function-types, is-decidable-Π-Fin. It factors through dependent-function equivalences unavailable in the local Chapter 8 foundation; the adapted source candidate is preserved as blocked."
+        }
+      ],
+      "review_sha256": "6f4f9fe8599e8857dec19e0dd66a3b9190c7718d98d8374de2bc0ba249b5bdbd",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-9-finite-dependent-products-exercise-8-9-b": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide supplies is-decidable-Π-Fin for part (a), but marks part (b) TODO; that result decides dependent propositions and does not provide decidable equality of dependent functions."
+        }
+      ],
+      "review_sha256": "919b6684a64da5f44f3d5fd0080ec3ce1c25da9436978b8ba1874caae5dcaa43",
+      "state": "pending"
+    },
+    "proposition-7.4.6-small-divisor-and-bounded-congruence-adapted": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Here le-ℕ means strict inequality, so the hypothesis is exactly x < d."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-5-4-transport-block-82": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This is copied from agda-unimath. Do we want to keep dependent-identification, or inline it into the definition of apd?"
+        }
+      ],
+      "state": "pending"
+    },
+    "section-5-5-the-uniqueness-of-refl-block-65": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This proof does not exist in agda-unimath and was supplied by hand."
+        },
+        {
+          "author": "Daniel C",
+          "text": "The closest reference source found proves that Σ(x : A), a = x is contractible, a notion that has not yet been defined here, so it is not quite a correct source for this proof."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-1-the-curry-howard-interpretation-block-186": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "agda-unimath uses a dedicated ap-add-ℕ function defined via ap-binary. This code instead follows the textbook proof, subject to the earlier reversed-multiplication caveat."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-1-the-curry-howard-interpretation-block-59": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This code is copied from agda-unimath, which defines multiplication in the opposite order from the textbook (k * m rather than m * k). This makes the later proof slightly different from both the textbook and the library proof."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-2-the-congruence-relations-on-natural-numbers-block-86": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "In agda-unimath, equivalence relations are defined only for relations valued in propositions."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-3-the-standard-finite-types-block-136": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This code was manually supplied. Is there a source for it in agda-unimath, and do we want it here at all?"
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-3-the-standard-finite-types-block-230": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "At this point, is-injective should have a proper earlier definition and be imported; it appears to be used multiple times before this."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-3-the-standard-finite-types-block-77": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This differs slightly from agda-unimath, where finite types are first defined as sets and then cast to types."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-3-the-standard-finite-types-block-87": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Not sure whether this inclusion should be included here; in particular, there is no analogous code for inclusion of the point."
+        }
+      ],
+      "state": "pending"
+    }
+  },
+  "version": 1
+}
