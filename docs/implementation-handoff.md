@@ -58,9 +58,7 @@ Then perform the release work in this order:
 4. Update imports, tests, scripts, documentation, ignore rules, and CI paths.
 5. Replace the incomplete README with a newcomer guide. Add setup, cloning with
    submodules, conversion, review-program use, reading the book, contributing,
-   troubleshooting, dependency versions, and current limitations. Add a root
-   license or an explicit licensing statement after confirming the intended
-   license with the user.
+   troubleshooting, dependency versions, and current limitations.
 6. Add GitHub Actions for unit tests, ordinary checks, diff checks,
    reproducible generation, and Agda typechecking. Do not enable branch
    protection; the user explicitly declined it.

@@ -129,12 +129,6 @@ some historical blocks are explicitly classified as handwritten/local, and
 automatically rendered diagrams still require human judgment. Review state is
 informational unless a strict release check is explicitly requested.
 
-## Licensing
-
-Licensing terms are awaiting confirmation from the project owner. Until a
-license is added, copyright law reserves reuse rights; do not assume an
-open-source license for the code, LaTeX sources, or generated book.
-
 ## Acknowledgments
 
 The prose source is the [arXiv version](https://arxiv.org/abs/2212.11082) of
