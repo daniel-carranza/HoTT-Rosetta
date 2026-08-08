@@ -13,6 +13,21 @@ from .file_registry import registered_filename
 from .layout import rosetta_directory
 
 
+def agda_typecheck_options(agda: str) -> list[str]:
+    """Return portable Agda options, suppressing interfaces when supported."""
+
+    help_process = subprocess.run(
+        [agda, "--help"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    options = ["--no-libraries"]
+    if "--no-write-interfaces" in help_process.stdout + help_process.stderr:
+        options.append("--no-write-interfaces")
+    return options
+
+
 def slugify(title: str) -> str:
     value = title.replace("Martin-L\\\"of", "Martin-Lof")
     value = value.replace("'", "").replace("’", "")
@@ -199,8 +214,7 @@ def typecheck_candidate(root: Path, filename: str, document: str):
     process = subprocess.run(
         [
             agda,
-            "--no-libraries",
-            "--no-write-interfaces",
+            *agda_typecheck_options(agda),
             "-i",
             str(staged.parent),
             "-i",

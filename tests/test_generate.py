@@ -2,16 +2,32 @@ import tempfile
 import unittest
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 from rosetta.agda_manifest import AgdaBlock, load_manifest
 from rosetta.generate import (
-    candidate_chapter, candidate_exercise, candidate_section,
+    agda_typecheck_options, candidate_chapter, candidate_exercise, candidate_section,
     section_module_name, slugify, write_candidate,
 )
 from rosetta.latex import inventory
 
 
 class GenerateTests(unittest.TestCase):
+    @patch("rosetta.generate.subprocess.run")
+    def test_agda_interface_option_is_used_when_supported(self, run):
+        run.return_value.stdout = "  --no-write-interfaces"
+        run.return_value.stderr = ""
+        self.assertEqual(
+            agda_typecheck_options("agda"),
+            ["--no-libraries", "--no-write-interfaces"],
+        )
+
+    @patch("rosetta.generate.subprocess.run")
+    def test_agda_interface_option_is_omitted_when_unsupported(self, run):
+        run.return_value.stdout = "Agda 2.8 help"
+        run.return_value.stderr = ""
+        self.assertEqual(agda_typecheck_options("agda"), ["--no-libraries"])
+
     def test_candidate_section_rejects_curated_destination_name_mismatch(self):
         root = Path(__file__).resolve().parent.parent
         section = inventory(root / "book")[2]

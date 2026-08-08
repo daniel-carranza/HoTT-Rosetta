@@ -7,6 +7,8 @@ from rosetta.cli import command_typecheck_all
 class AggregateTypecheckTests(unittest.TestCase):
     def test_typecheck_all_checks_registered_chapters_in_order(self):
         with patch("rosetta.cli.shutil.which", return_value="/usr/bin/agda"), patch(
+            "rosetta.cli.agda_typecheck_options", return_value=["--no-libraries"]
+        ), patch(
             "rosetta.cli.subprocess.run"
         ) as run:
             run.return_value.returncode = 0

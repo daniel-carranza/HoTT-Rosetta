@@ -25,7 +25,8 @@ If the repository is already cloned, initialize the submodule with:
 git submodule update --init --recursive
 ```
 
-Required tools are Python 3.10 or newer, Pandoc, and Agda 2.8.0. The converter
+Required tools are Python 3.10 or newer, Pandoc 3.10.1, and Agda 2.8.0 or
+newer. The converter
 uses only Python’s standard library. Agda is needed for typechecking but not
 for ordinary conversion or browsing. Confirm installations with:
 
@@ -113,7 +114,7 @@ for the complete contract.
 ## Troubleshooting
 
 - “Pandoc is not installed”: install Pandoc and ensure `pandoc` is on `PATH`.
-- “Agda is not installed”: install Agda 2.8.0 and ensure `agda` is on `PATH`.
+- “Agda is not installed”: install Agda 2.8.0 or newer and ensure `agda` is on `PATH`.
 - Provenance checks cannot read agda-unimath: run `git submodule update --init`.
 - A local import is missing: regenerate the complete dependency range and
   confirm `data/project-layout.json` points to `rosetta-book`.

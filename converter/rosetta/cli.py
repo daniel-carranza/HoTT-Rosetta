@@ -21,6 +21,7 @@ from .compare import (
     pending_diagram_count,
 )
 from .generate import (
+    agda_typecheck_options,
     candidate_chapter,
     candidate_exercise,
     candidate_section,
@@ -427,8 +428,7 @@ def command_typecheck_all(first: int, last: int) -> int:
         process = subprocess.run(
             [
                 agda,
-                "--no-libraries",
-                "--no-write-interfaces",
+                *agda_typecheck_options(agda),
                 "-i",
                 str(directory),
                 str(path),
