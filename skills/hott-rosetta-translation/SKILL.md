@@ -1,205 +1,99 @@
 ---
 name: hott-rosetta-translation
-description: Translate LaTeX sources in book/ into literate Agda Markdown files in src/ for HoTT-Rosetta. Use when creating chapter, section, or exercise .lagda.md files from the book sources, preserving repository naming, module, markdown, and Agda conventions.
+description: Convert HoTT book LaTeX into generated literate Agda Markdown, improve section prose or formalization, curate provenance-backed agda-unimath blocks, and maintain the optional review workflow in the HoTT-Rosetta repository.
 ---
 
 # HoTT-Rosetta Translation
 
-## Scope
+## Core workflow
 
-Use this workflow to translate the LaTeX files in `book/` into literate Agda Markdown files in `src/`.
-Treat `README.md` as the repository-level source of truth for file organization, file structure, Markdown formatting, and self-contained Agda compilation conventions.
+1. Read `AGENTS.md`, `docs/implementation-handoff.md`, and
+   `docs/conversion-contract.md` completely.
+2. Read only the references relevant to the task:
+   - section work: `references/section-files.md` and
+     `references/latex-to-markdown.md`;
+   - chapter aggregation: `references/chapter-files.md`;
+   - explicitly requested exercise work: `references/exercise-files.md`.
+3. Inspect the LaTeX source, converter code, curated data, and active generated
+   output needed for the task.
+4. Change the converter or versioned data, regenerate, and validate. Do not
+   repair generated documents by hand unless the user explicitly requests it.
 
-In this repository, a `src/chapter-N-...lagda.md` file corresponds to a globally numbered LaTeX `\section`, not to a LaTeX `\chapter`.
-A `src/section-N-M-...lagda.md` file corresponds to a LaTeX `\subsection` inside that `\section`.
-A `src/exercise-N-K-...lagda.md` file corresponds to the `K`th `\exitem` in that `\section`'s exercises block.
+The active output directory comes only from `data/project-layout.json`.
+Stable names come from `data/rosetta-files.json`. Never consult
+`archive/legacy-rosetta/`; it is the historical former `src/` backup.
 
-## New File Preflight
+## Priorities
 
-Whenever asked to create a new chapter, section, or exercise file:
+Prioritize section files: first faithful natural-language mathematics, then
+applicable Agda for their definitions, results, constructions, and proofs.
+After sections, maintain aggregate chapters and converter correctness.
 
-1. Pull remote changes to the repository first.
-2. Update `skills/hott-rosetta-translation/STATUS.md` from the current repository contents.
-3. Check whether the requested file is still listed as missing.
-4. If the requested file is no longer missing, stop without creating a duplicate file and instead describe the contents of the existing file to the user.
-5. If the requested file exists but appears incomplete, partially translated, or inconsistent with `STATUS.md`, stop and ask the user how to proceed.
+Exercise prose and structure remain conversion outputs, but finding Agda for
+exercise solutions is lower priority. Do not proactively fill missing exercise
+Agda blocks unless the user requests it or a section depends on that code.
 
-## New File Completion
+## Structure and naming
 
-Whenever new chapter, section, or exercise files are created:
+A globally numbered LaTeX `\section` becomes a Rosetta chapter. A LaTeX
+`\subsection` becomes a Rosetta section. An `\exitem` becomes an exercise.
 
-1. Add all new files and related status or instruction updates to the git repository.
-2. Commit the completed translation work.
-3. Push the commit to the remote repository.
+- `chapter-N-title-slug.lagda.md`
+- `section-N-M-title-slug.lagda.md`
+- `exercise-N-K-topic-slug.lagda.md`
 
-## Editing Existing Files
+Each file begins with a level-one heading and an Agda module whose name exactly
+matches the basename. Put Agda blocks near the mathematical item they formalize.
+Use stable `rosetta-item` and `rosetta-agda-block` markers through the converter,
+not manual output edits.
 
-Do not edit, cut, reorganize, or delete existing file contents without checking with the user, unless the user has explicitly instructed you to do so.
-Adding missing material is usually acceptable when it is needed for the requested translation work, but preserve existing text and Agda code unless the user approves a change.
-Adding a missing import to an existing chapter file after creating a new section or exercise file counts as adding missing material.
+## Agda sourcing
 
-## Source Order
+Before adding a block, search the pinned repository submodule at
+`external/agda-unimath` for exact and analogous code.
 
-Read `book/hott-intro.tex`.
-Follow the uncommented `\input{chapter-...}` entries, then the uncommented `\input{...}` entries inside those chapter files.
-Continue in source order, not alphabetical order.
+- Never write a new block by hand or recreate upstream-looking code.
+- Copy the closest applicable source. Preserve its names, structure, line
+  breaks, and indentation where possible.
+- Make only changes required by established local names, universes, imports, or
+  dependencies. Mark any changed block as adapted, never exact.
+- Record the upstream commit, file, inclusive line range, SHA-256 hash, stored
+  code, and a concise adaptation note in `data/agda-blocks*.json`.
+- Generated documents may import only repository-local modules, never
+  `external/agda-unimath` modules.
+- If no applicable source exists, record a missing-code gap and continue with
+  other in-scope section work. Do not invent a replacement.
 
-## Naming
+Typecheck every changed section containing Agda with:
 
-Use lowercase ASCII slugs with words separated by hyphens.
-
-- Chapter file: `src/chapter-N-title-slug.lagda.md`
-- Section file: `src/section-N-M-title-slug.lagda.md`
-- Exercise file: `src/exercise-N-K-short-topic-slug.lagda.md`
-
-Examples:
-
-- `chapter-3-the-natural-numbers.lagda.md`
-- `section-3-2-addition-on-the-natural-numbers.lagda.md`
-- `exercise-3-1-multiplication-and-exponentiation.lagda.md`
-
-For exercise slugs, choose a concise mathematical topic slug from the exercise statement, matching existing style.
-
-## File Headers And Modules
-
-Every file starts with a level-1 Markdown heading, then an Agda module declaration.
-The heading should include the chapter, section, or exercise number and title.
-The module declaration is written in an `agda` code block immediately after the title.
-
-Chapter:
-
-````markdown
-# Chapter N Title
-
-```agda
-module chapter-N-title-slug where
-```
-````
-
-Section:
-
-````markdown
-# Section N.M Title
-
-```agda
-module section-N-M-title-slug where
-```
-````
-
-Exercise:
-
-````markdown
-# Exercise N.K Title
-
-```agda
-module exercise-N-K-short-topic-slug where
-```
-````
-
-The module name must exactly match the file basename.
-
-## Chapter Files
-
-For detailed chapter-file creation instructions, read `references/chapter-files.md`.
-
-A chapter file contains the introductory prose from the corresponding LaTeX `\section` before its first `\subsection`.
-Then import every created section and exercise file for that chapter.
-
-Use plain imports:
-
-```agda
-open import section-N-1-...
-open import exercise-N-1-...
+```text
+python3 rosetta.py typecheck-candidate N M
 ```
 
-Do not import files that do not exist unless the task is to create them in the same change.
+When shared dependencies change, also typecheck the aggregate chapter.
 
-## Section Files
+## Review comments
 
-For detailed section-file creation instructions, read `references/section-files.md`.
+While supplying candidate blocks, add a `codex` comment only when it helps a
+reviewer answer a likely mathematical, logical, or source question. For a
+useful search gap, name the closest relevant upstream definitions and briefly
+say why they are insufficient. Clearly distinguish exact, adapted, and merely
+related sources.
 
-A section file contains the translated body of the corresponding LaTeX `\subsection`.
-For detailed LaTeX-to-Markdown conversion hints, read `references/latex-to-markdown.md`.
-
-Follow existing Markdown conventions:
-
-- One sentence per line.
-- Text and Agda code block lines should be no longer than 80 characters.
-  The only exceptions are named module declarations, `open import` statements,
-  and lines consisting of a single, possibly parenthesized token that may be
-  followed by one of `;`, `:`, `=`, or `→`, matching agda-unimath style.
-  For Agda code copied from agda-unimath, preserve agda-unimath line breaks
-  verbatim even when the copied source exceeds 80 characters.
-- Inline mathematics becomes code spans where practical.
-- Display mathematics becomes fenced `text` blocks, preceded and followed by one blank line.
-- Definitions, propositions, remarks, examples, and similar theorem environments become Markdown headings such as `## Definition N.M.K` or `### Remark N.M.K`, following nearby files.
-- Proofs may use `### Construction` or ordinary prose, matching the source and existing local style.
-- Preserve ordinary citations in readable prose.
-- For cross references such as `\cref{...}` or `\ref{...}`, ask the user for the intended Markdown wording before proceeding.
-- Drop LaTeX indexing commands.
-- Translate common HoTT notation into the Unicode/plain-text notation already used in `src/`.
-
-Put Agda code blocks close to the mathematical definition or result they formalize.
-Prefer definitions already present in earlier repository files over importing large external developments.
-
-## Exercise Files
-
-For detailed exercise-file creation instructions, read `references/exercise-files.md`.
-
-Exercise files should contain:
-
-```markdown
-## Problem statement
-```
-
-followed by the translated exercise statement, and then:
-
-```markdown
-## Solution
-```
-
-with Agda formalization when available or requested.
-
-If the exercise has multiple parts, keep the statement structure clear with Markdown lists or subheadings.
-
-## Agda Conventions
-
-Inspect nearby files before writing code.
-Agda code should follow the naming and coding conventions of the agda-unimath library, especially the upstream style guide at `https://github.com/UniMath/agda-unimath/blob/master/docs/CODINGSTYLE.md`.
-Before writing an Agda code block, search the in-repository agda-unimath
-submodule at `external/agda-unimath` when it is available.
-If that submodule is missing or insufficient, fall back to the local checkout at
-`/Users/egbertrijke/Repositories/agda-unimath`, and fall back to
-`https://github.com/UniMath/agda-unimath` only if no local source is available.
-If corresponding agda-unimath code exists, copy it verbatim.
-Preserve the agda-unimath names, structure, line breaks, and indentation.
-Do not translate agda-unimath names into book notation, and do not write
-agda-unimath-like replacement code.
-Such approximations are not acceptable for this project.
-Do not introduce extra line breaks into copied Agda code unless a local
-adaptation is required for this repository to typecheck.
-Keep such adaptations at the import or compatibility boundary whenever
-possible, and leave the copied definitions and proofs themselves exact.
-If exact copied code cannot be made to typecheck without changing the copied
-definition or proof, stop and ask the user how to proceed.
-Do not write new Agda code unless the relevant task-specific reference explicitly permits it or the user explicitly asks for it.
-The `.lagda.md` files in this repository must typecheck without depending on agda-unimath.
-Do not import agda-unimath modules or any other external library modules in translated files.
-Only import files that are present in this repository, such as `universe-levels`.
-
-- Keep imports minimal.
-- Reuse earlier chapter/section files where possible.
-- Use `universe-levels` when universe declarations are needed.
-- Do not introduce postulates unless explicitly requested.
-- Keep names consistent with the book notation and existing Agda names.
-- Typecheck edited files with `agda <file>` when Agda work is added or changed.
+Keep comments short and plain. Do not add routine search histories, speculative
+lists, code summaries, or comments that only report successful typechecking.
+Missing-code items use the same review interface with empty candidate code.
 
 ## Validation
 
-Before finishing a created file:
+Confirm source coverage, numbering, file/module agreement, local imports, and
+Agda placement. Before handoff run:
 
-1. Confirm the filename, module name, and heading agree.
-2. Confirm the source LaTeX range was fully translated.
-3. Confirm all imported modules exist.
-4. Run Agda on files containing Agda code when feasible.
-5. Update the status document with created and remaining chapter, section, and exercise files.
+```text
+python3 -m unittest discover
+python3 rosetta.py check
+git diff --check
+```
+
+Preserve unrelated and uncommitted work. Do not pull, commit, push, reset, or
+clean unless the user explicitly requests it.

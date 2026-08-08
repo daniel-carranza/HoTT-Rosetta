@@ -11,6 +11,7 @@ from .latex import inventory
 from .review import discover_diagram_reviews
 from .agda_review import discover_agda_reviews
 from .active_files import active_files
+from .file_registry import load_file_registry
 from .layout import rosetta_directory
 
 
@@ -74,6 +75,23 @@ def repository_checks(root: Path) -> List[Diagnostic]:
         findings.append(Diagnostic("ok", "The agda-unimath submodule is initialized."))
 
     files = active_files(root)
+    registered = set(load_file_registry(root).values())
+    support = {
+        path.name for path in (root / "data" / "support-files").iterdir()
+        if path.is_file()
+    }
+    actual = {path.name for path in active_directory.iterdir() if path.is_file()}
+    missing_product = sorted((registered | support) - actual)
+    unregistered_product = sorted(actual - registered - support)
+    if missing_product or unregistered_product:
+        details = []
+        if missing_product:
+            details.append("missing: " + ", ".join(missing_product))
+        if unregistered_product:
+            details.append("unregistered: " + ", ".join(unregistered_product))
+        findings.append(Diagnostic("error", "Generated product inventory mismatch (" + "; ".join(details) + ")."))
+    else:
+        findings.append(Diagnostic("ok", f"Generated product inventory is exact ({len(actual)} files)."))
     source_files = {path.name for path in files}
     broken_imports = []
     import_re = re.compile(r"^open import ([^\s]+)", re.MULTILINE)

@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests-and-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+      - name: Install Pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
+      - name: Unit tests
+        run: python3 -m unittest discover
+      - name: Repository checks
+        run: python3 rosetta.py check
+      - name: Whitespace checks
+        run: git diff --check
+
+  regeneration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+      - name: Install Pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
+      - name: Regenerate Chapters 1–22
+        run: python3 rosetta.py convert --from 1 --to 22
+      - name: Require a reproducible tracked book
+        run: git diff --exit-code -- rosetta-book
+
+  agda-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install Agda 2.8.0
+        uses: ./external/agda-unimath/.github/actions/setup-agda
+        with:
+          agda-version: '2.8.0'
+      - name: Typecheck aggregate Chapters 1–22
+        run: python3 rosetta.py typecheck-all

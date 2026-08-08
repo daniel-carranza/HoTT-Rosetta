@@ -1,26 +1,19 @@
-# Section Files
+# Section files
 
-To create a new section file, follow the general naming and file header conventions described in `../SKILL.md`.
+Section files are the project’s primary content and formalization priority.
+Each corresponds to one LaTeX `\subsection`; its source ends at the next
+`\subsection`, exercises environment, or source-file end.
 
-Use `../STATUS.md` to identify the corresponding LaTeX source file.
-Before doing any work, pull the remote and update `../STATUS.md` to see whether the section file is missing.
-If the target file exists but appears incomplete, partially translated, or inconsistent with `../STATUS.md`, stop and ask the user how to proceed.
+Preserve the complete natural-language mathematics, order, item numbering,
+proofs, references, and displays. Use `# Section N.M Title` and numbered
+level-two item headings such as `## Definition N.M.K`. Let the converter emit
+the module declaration and stable item markers.
 
-The general objective is to copy all of the text in the appropriate LaTeX `\subsection` into this `.lagda.md` section file.
-The relevant source range begins immediately after that `\subsection{...}` heading and ends immediately before the next `\subsection`, the `exercises` environment, or the end of the LaTeX source file, whichever comes first.
-Convert the LaTeX to Markdown following the instructions in `latex-to-markdown.md`.
+For every definition, result, construction, or proof that needs formalization,
+search pinned agda-unimath for exact and analogous code. Add only copied,
+provenance-backed code with necessary local adaptations; never invent code.
+Keep code beside its associated item and use only repository-local imports.
 
-The section title itself is a level-one header, e.g. `# Section 3.2 Addition on the natural numbers`.
-Definitions, propositions, and any theorem environment should be level-two headers of the form `## Definition 3.2.1`, using the correct chapter number, section number, and reference number.
-
-For any definition, construction, or remark that defines elements or types, include a corresponding Agda code block.
-For each Agda code block, search the agda-unimath library for the corresponding Agda code and copy it in exactly.
-In parallel, search this repository for existing imports that might help the copied code compile.
-After copying the code and adding only repository-local imports, check whether the section file typechecks.
-If the copied code fails to typecheck, do not try to correct or rewrite the code.
-Instead, stop and report an error message that diagnoses what went wrong, including the relevant Agda error and any missing local imports or dependencies you found.
-
-In general, do not write any Agda code in section files that is not copied verbatim from the agda-unimath library.
-
-When the section file is created, update the corresponding chapter file to add the missing section import if the chapter file exists.
-This is an expected addition of missing material, but do not otherwise edit existing chapter text without user approval.
+After changing a section, regenerate it, inspect the active output, run
+`python3 rosetta.py typecheck-candidate N M` when it contains Agda, and run the
+repository validation required by `AGENTS.md`.
