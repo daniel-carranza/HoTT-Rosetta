@@ -24,8 +24,8 @@ open import section-7-4-the-natural-numbers-modulo-k-plus-one
 <!-- rosetta-item: section-7.5 -->
 
 We can now define the cyclic groups `ℤ/k` for each `k:ℕ`.
-Note that `ℤ/k` must come equipped with the structure of a quotient `ℤ/{≃}` of `ℤ` by the congruence relation modulo `k`.
-In the case where `k≐ 0`, we have that `x≃ ymod{0}` if and only if `x=y`.
+Note that `ℤ/k` must come equipped with the structure of a quotient `ℤ/{≡}` of `ℤ` by the congruence relation modulo `k`.
+In the case where `k≐ 0`, we have that `x≡ ymod{0}` if and only if `x=y`.
 This motivates the following definition:
 
 ## Definition 7.5.1
@@ -86,9 +86,9 @@ neg-Fin (succ-ℕ k) x =
 
 The following congruences modulo `k+1` follow immediately from Proposition 7.4.5:
 ```text
-nat-Fin(0) ≃ 0
-nat-Fin(x+y) ≃ nat-Fin(x)+nat-Fin(y)
-nat-Fin(-x) ≃ dist-ℕ(nat-Fin(x),k+1).
+nat-Fin(0) ≡ 0
+nat-Fin(x+y) ≡ nat-Fin(x)+nat-Fin(y)
+nat-Fin(-x) ≡ dist-ℕ(nat-Fin(x),k+1).
 ```
 
 Before we show that addition on `ℤ/{k}` satisfies the group laws, we have to show that addition on `ℕ` preserves the congruence relation.
@@ -116,11 +116,11 @@ cong-neg-Fin {succ-ℕ k} x =
 Consider `x,y,x',y':ℕ`.
 If any two of the following three properties hold, then so does the third:
 
-1.  `x≃ x'mod k`,
+1.  `x≡ x'mod k`,
 
-2.  `y≃ y'mod k`,
+2.  `y≡ y'mod k`,
 
-3.  `x+y≃ x'+y'mod k`.
+3.  `x+y≡ x'+y'mod k`.
 
 ### Proof
 
@@ -129,23 +129,23 @@ If any two of the following three properties hold, then so does the third:
 *Proof.* Recall that the distance function `dist-ℕ` is translation invariant by Exercise 6.5.
 Therefore it follows that
 ```text
-a≃ bmod k ↔ a+c≃ b+cmod k.(*)
+a≡ bmod k ↔ a+c≡ b+cmod k.(*)
 ```
 We will use this observation to prove the claim.
 
-First, suppose that `x≃ x'` and `y≃ y'` modulo `k`.
-Then it follows by (*) that
+First, suppose that `x≡ x'` and `y≡ y'` modulo `k`.
+Then it follows by (\*) that
 ```text
-x+y≃ x'+y≃ x'+y'.
+x+y≡ x'+y≡ x'+y'.
 ```
 This shows that (i) and (ii) together imply (iii).
 
-Next, suppose that `x≃ x'` and `x+y≃ x'+y'` modulo `k`.
+Next, suppose that `x≡ x'` and `x+y≡ x'+y'` modulo `k`.
 Then it follows that
 ```text
-x+y≃ x'+y'≃ x+y'.
+x+y≡ x'+y'≡ x+y'.
 ```
-Applying (*) once more in the reverse direction, we obtain that `y≃ y'` modulo `k`.
+Applying (\*) once more in the reverse direction, we obtain that `y≡ y'` modulo `k`.
 This shows that (i) and (iii) together imply (ii).
 
 The remaining claim, that (ii) and (iii) together imply (i), follows by commutativity of addition from the fact that (i) and (iii) together imply (ii). ◻
@@ -247,16 +247,16 @@ We first note that by commutativity of addition on `ℕ`, it follows immediately
 
 To prove associativity, note that by Theorem 7.4.7 it suffices to show that
 ```text
-nat-Fin(x+y)+nat-Fin(z)≃nat-Fin(x)+nat-Fin(y+z)mod k+1.
+nat-Fin(x+y)+nat-Fin(z)≡nat-Fin(x)+nat-Fin(y+z)mod k+1.
 ```
 Since addition on `ℤ/{(k+1)}` maps preserves the congruence relation, and since we have the congruences
 ```text
-nat-Fin(x+y) ≃ nat-Fin(x)+nat-Fin(y) mod k+1
-nat-Fin(y+z) ≃ nat-Fin(y)+nat-Fin(z) mod k+1,
+nat-Fin(x+y) ≡ nat-Fin(x)+nat-Fin(y) mod k+1
+nat-Fin(y+z) ≡ nat-Fin(y)+nat-Fin(z) mod k+1,
 ```
 it suffices to show that
 ```text
-(nat-Fin(x)+nat-Fin(y))+nat-Fin(z) ≃ nat-Fin(x)+(nat-Fin(y)+nat-Fin(z)) mod k+1.
+(nat-Fin(x)+nat-Fin(y))+nat-Fin(z) ≡ nat-Fin(x)+(nat-Fin(y)+nat-Fin(z)) mod k+1.
 ```
 This follows immediately by associativity of addition on `ℕ`.
 
@@ -267,7 +267,7 @@ To show that addition on `ℤ/{(k+1)}` satisfies the right unit law, we first ob
 because there is an identification `[nat-Fin(x)]_{k+1}=x` by Theorem 7.4.8.
 By Theorem 7.4.7 it now suffices tho show that
 ```text
-nat-Fin(x)+nat-Fin(0)≃nat-Fin(x)mod k+1.
+nat-Fin(x)+nat-Fin(0)≡nat-Fin(x)mod k+1.
 ```
 This follows immediately from the fact that `nat-Fin(0)=0`.
 The left unit law now follows from the right unit law by commutativity.

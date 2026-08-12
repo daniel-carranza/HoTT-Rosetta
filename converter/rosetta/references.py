@@ -178,9 +178,22 @@ PANDOC_REFERENCE_RE = re.compile(
 def resolve_markdown_references(
     markdown: str, index: Dict[str, Reference]
 ) -> str:
-    return PANDOC_REFERENCE_RE.sub(
-        lambda match: reference_wording(
+    def replacement(match: re.Match) -> str:
+        wording = reference_wording(
             html.unescape(match.group(1)).split(","), index
-        ),
-        markdown,
-    )
+        )
+        if wording.startswith("**[unresolved reference:"):
+            return wording
+        prefix = markdown[: match.start()]
+        at_sentence_start = (
+            not prefix.strip()
+            or re.search(r"\n\s*\n\s*$", prefix) is not None
+            or re.search(r"[.!?][\"')\]]*\s*$", prefix) is not None
+        )
+        if at_sentence_start and wording[:1].islower():
+            wording = wording[:1].upper() + wording[1:]
+        # Reference wording is inserted into Markdown prose, so literal stars
+        # must not participate in emphasis delimiters across the paragraph.
+        return wording.replace("*", r"\*")
+
+    return PANDOC_REFERENCE_RE.sub(replacement, markdown)

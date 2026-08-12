@@ -98,14 +98,14 @@ On the other hand, the type
 Σ(n:ℕ) Π(x:ℕ) (x| n)→ (x| a)× (x| b)(**)
 ```
 consists of all the common divisors of `a` and `b` except in the case where `a=0` and `b=0`.
-In this case, the type in (**) consists of all natural numbers.
+In this case, the type in (\*\*) consists of all natural numbers.
 
-the two displayed types provide us with two ways to define the greatest common divisor.
-We can either define the greatest common divisor of `a` and `b` as the greatest natural number in the type in (**) or we can define it as the least *nonzero* natural number of the type in (*), provided that we make an exception in the case where both `a=0` and `b=0`.
+The two displayed types provide us with two ways to define the greatest common divisor.
+We can either define the greatest common divisor of `a` and `b` as the greatest natural number in the type in (\*\*) or we can define it as the least *nonzero* natural number of the type in (\*), provided that we make an exception in the case where both `a=0` and `b=0`.
 Since we already have established the well-ordering principle of `ℕ`, we will opt for the second approach.
 In Exercise 8.10 you will be asked to show that any *bounded* decidable family over `ℕ` has a maximum as soon as it contains some natural number.
 
-In order to correctly define the greatest common divisor using well-ordering principle of `ℕ`, we need a slight modification of the type family in (*).
+In order to correctly define the greatest common divisor using well-ordering principle of `ℕ`, we need a slight modification of the type family in (\*).
 We define this family as follows:
 
 <!-- rosetta-agda-block: proposition-8.4.2-common-divisor-gcd -->
@@ -139,16 +139,16 @@ abstract
 
 <!-- rosetta-item: definition-8.4.3; latex-label: defn:fam-gcd -->
 
-Given `a,b:ℕ`, we define the type family `is-multiple-of-gcd(a,b)` over `ℕ` by
+Given `a,b:ℕ`, we define the type family `M(a,b)` over `ℕ` by
 ```text
-is-multiple-of-gcd(a,b,n) ≔ (a+b≠ 0) → (n≠ 0)× (Π(x:ℕ) (x| a)× (x| b) → (x| n)).
+M(a,b,n) ≔ (a+b≠ 0) → (n≠ 0)× (Π(x:ℕ) (x| a)× (x| b) → (x| n)).
 ```
 
 In other words, if `a+b=0` then the type `Σ(n:ℕ) M(a,b,n)` consist of all the natural numbers.
 On the other hand, if `a+b≠ 0` it consists of the nonzero natural numbers `n` with the property that any common divisor of `a` and `b` also divides `n`.
 These are exactly the nonzero multiples of the greatest common divisor of `a` and `b`.
 
-Since we intend to apply the well-ordering principle, we must show that the family `is-multiple-of-gcd(a,b)` is decidable.
+Since we intend to apply the well-ordering principle, we must show that the family `M(a,b)` is decidable.
 This is a step that one can skip in classical mathematics, because all the subsets of `ℕ` are decidable there.
 However, in our current setting we have no choice but to prove it.
 
@@ -165,7 +165,7 @@ is-multiple-of-gcd-ℕ a b n =
 
 <!-- rosetta-item: proposition-8.4.4; latex-label: prp:is-decidable-is-multiple-of-gcd -->
 
-The type family `is-multiple-of-gcd(a,b)` is decidable for each `a,b:ℕ`.
+The type family `M(a,b)` is decidable for each `a,b:ℕ`.
 
 ### Proof
 
@@ -258,13 +258,13 @@ abstract
 
 <!-- rosetta-item: lemma-8.4.5; latex-label: lem:exists-multiple-of-gcd -->
 
-There is an element of type `is-multiple-of-gcd(a,b,a+b)`.
+There is an element of type `M(a,b,a+b)`.
 
 ### Proof
 
 <!-- rosetta-item: subheading-8.4-proof-3 -->
 
-*Proof.* To construct an element of type `is-multiple-of-gcd(a,b,a+b)`, assume that `a+b≠ 0`.
+*Proof.* To construct an element of type `M(a,b,a+b)`, assume that `a+b≠ 0`.
 Then we have tautologically that `a+b≠ 0`, and any common divisor of `a` and `b` is also a divisor of `a+b`. ◻
 
 <!-- rosetta-agda-block: lemma-8.4.5-sum-multiple-gcd -->
@@ -315,7 +315,7 @@ For any two natural numbers `a` and `b`, we have `gcd(a,b)=0` if and only if `a+
 <!-- rosetta-item: subheading-8.4-proof-4 -->
 
 *Proof.* To prove the forward direction, assume that `gcd(a,b)=0`.
-By definition of `gcd(a,b)` we have that `is-multiple-of-gcd(a,b,gcd(a,b))` holds.
+By definition of `gcd(a,b)` we have that `M(a,b,gcd(a,b))` holds.
 More explicitly, the implication
 ```text
 (a+b≠ 0)→ (gcd(a,b)≠ 0)× Π(x:ℕ) (x| a)×(x| b)→ (x|gcd(a,b))
@@ -325,7 +325,7 @@ However, we have assumed that `gcd(a,b)=0`, so it follows from the above implica
 In other words, we have `¬¬(a+b=0)`.
 The fact that equality on `ℕ` is decidable implies via Exercise 4.3 that `¬¬(a+b=0)→ (a+b=0)`, so we conclude that `a+b=0`.
 
-For the converse direction, recall that the inequality `gcd(a,b)≤ a+b` holds by minimality, since `is-multiple-of-gcd(a,b,a+b)` holds by Lemma 8.4.5.
+For the converse direction, recall that the inequality `gcd(a,b)≤ a+b` holds by minimality, since `M(a,b,a+b)` holds by Lemma 8.4.5.
 If `a+b=0`, it therefore follows that `gcd(a,b)≤ 0`, which implies that `gcd(a,b)=0`. ◻
 
 <!-- rosetta-agda-block: lemma-8.4.7-double-negation-elimination -->
@@ -379,7 +379,7 @@ If we assume that `a+b=0`, then it follows that both `a=0` and `b=0`, and by Lem
 Since any number divides `0`, the claim follows immediately.
 
 In the case where `a+b≠ 0`, it follows from Lemma 8.4.7 that also `gcd(a,b)≠ 0`.
-From the fact that `is-multiple-of-gcd(a,b,gcd(a,b))` we therefore immediately obtain that
+From the fact that `M(a,b,gcd(a,b))` we therefore immediately obtain that
 ```text
 Π(x:ℕ) (x| a)× (x| b)→ (x| gcd(a,b)).
 ```

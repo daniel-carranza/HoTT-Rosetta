@@ -7,6 +7,7 @@ from rosetta.references import (
     reference_wording,
     resolve_markdown_references,
 )
+from rosetta.pandoc import markdown_to_safe_html
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -67,6 +68,29 @@ class ReferenceTests(unittest.TestCase):
             'data-reference="item:f-up-trunc-Prop&#39;">[item]</a>'
         )
         self.assertEqual(resolve_markdown_references(encoded, index), "(ii)")
+
+    def test_equation_aliases_are_markdown_safe_and_sentence_capitalized(self):
+        index = build_reference_index(ROOT / "book")
+        group = (
+            '<a href="#group" data-reference-type="ref" '
+            'data-reference="eq:multiples-of-gcd,eq:common-divisors">[group]</a>'
+        )
+        single = (
+            '<a href="#single" data-reference-type="ref" '
+            'data-reference="eq:common-divisors">[single]</a>'
+        )
+        markdown = resolve_markdown_references(
+            f"Previous paragraph.\n\n{group} are useful. The type in {single} "
+            "is least *nonzero* and *bounded*.",
+            index,
+        )
+        self.assertIn("The two displayed types", markdown)
+        self.assertIn(r"(\*\*)", markdown)
+        rendered = markdown_to_safe_html(markdown)
+        self.assertIn("The two displayed types", rendered)
+        self.assertIn("(**)", rendered)
+        self.assertEqual(rendered.count("<em>"), 2)
+        self.assertEqual(rendered.count("</em>"), 2)
 
 
 if __name__ == "__main__":

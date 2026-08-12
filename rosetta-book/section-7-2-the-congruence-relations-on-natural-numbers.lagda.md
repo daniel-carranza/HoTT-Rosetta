@@ -47,7 +47,7 @@ A **(typal) equivalence relation** on `A` is a reflexive, symmetric, and transit
 
 To define the congruence relation modulo `k` in type theory using the Curry-Howard interpretation, we will define for any three natural numbers `x`, `y`, and `k`, a *type*
 ```text
-x≃ ymod k
+x≡ ymod k
 ```
 consisting of the proofs that `x` is congruent to `y` modulo `k`.
 We will define this type by directly interpreting Gauss’ definition of the congruence relations in his *Disquisitiones Arithmeticae* : two numbers `x` and `y` are congruent modulo `k` if `k` divides the symmetric difference `dist-ℕ(x,y)` between `x` and `y`.
@@ -119,7 +119,7 @@ equivalence-relation l A = Σ (Relation l A) is-equivalence-relation
 Consider three natural numbers `k,x,y:ℕ`.
 We say that `x` is **congruent to `y` modulo `k`** if it comes equipped with an element of type
 ```text
-x≃ y mod k ≔ k|dist-ℕ(x,y).
+x≡ y mod k ≔ k|dist-ℕ(x,y).
 ```
 
 <!-- rosetta-agda-block: section-7-2-the-congruence-relations-on-natural-numbers-block-129 -->
@@ -134,7 +134,7 @@ cong-ℕ k x y = div-ℕ k (dist-ℕ x y)
 
 <!-- rosetta-item: example-7.2.3 -->
 
-For example, `k≃ 0mod k`.
+For example, `k≡ 0mod k`.
 To see this, we have to show that `k|dist-ℕ(k,0)`.
 Since `dist-ℕ(k,0)=k` it suffices to show that `k| k`.
 That is, we have to construct a natural number `l` equipped with an identification `p:kl=k`.

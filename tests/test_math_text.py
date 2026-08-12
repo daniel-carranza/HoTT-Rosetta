@@ -65,6 +65,12 @@ class MathTextTests(unittest.TestCase):
             "‖P‖→is-decidable(P), ¬ P, x≠ y",
         )
 
+    def test_equiv_is_congruence_not_type_equivalence(self):
+        self.assertEqual(
+            normalize_math(r"x\equiv y\mod k, A\simeq B"),
+            "x≡ ymod k, A≃ B",
+        )
+
     def test_common_named_constructions(self):
         self.assertEqual(
             normalize_math(
@@ -83,6 +89,12 @@ class MathTextTests(unittest.TestCase):
         for command in _word_like_book_macros():
             with self.subTest(command=command):
                 self.assertNotIn(command, normalize_math(command))
+
+    def test_multiple_of_gcd_uses_the_books_displayed_notation(self):
+        self.assertEqual(
+            normalize_math(r"\ismultipleofgcd(a,b,n)"),
+            "M(a,b,n)",
+        )
 
     def test_accents_and_property_names(self):
         self.assertEqual(

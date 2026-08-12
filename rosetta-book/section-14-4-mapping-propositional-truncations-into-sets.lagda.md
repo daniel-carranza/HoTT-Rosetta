@@ -30,10 +30,10 @@ In other words, we claim that the type
 ```
 is a proposition.
 To see this, note that the type `is-lower-bound_P(x)` is a proposition.
-By the assumption that each `P(x)` is a proposition, it now follows that any two natural numbers `x,y:ℕ` that are in `P` and that are both lower bounds of `P` are equal as elements in the type of (*) if and only if they are equal as natural numbers.
+By the assumption that each `P(x)` is a proposition, it now follows that any two natural numbers `x,y:ℕ` that are in `P` and that are both lower bounds of `P` are equal as elements in the type of (\*) if and only if they are equal as natural numbers.
 Furthermore, since both `x` and `y` are lower bounds of `P`, it follows that `x≤ y` and `y≤ x`, so indeed `x=y` holds.
 
-By the observation that the type in (*) is a proposition, we may define a map
+By the observation that the type in (\*) is a proposition, we may define a map
 ```text
 ‖Σ(x:ℕ) P(x)‖→ Σ(x:ℕ) P(x)×is-lower-bound_P(x)
 ```
