@@ -1,14 +1,24 @@
 """Small dependency-free browser interface for Agda review."""
 
+import difflib
 import html
 import json
 import re
 import secrets
+import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, quote, unquote, urlparse
 
+from .agda_edit import apply_agda_block_edit, preview_agda_block_edit
+from .agda_scratchpad import (
+    discard_scratchpad,
+    load_scratchpad,
+    promotion_scratchpad,
+    run_scratchpad_typecheck,
+    save_scratchpad,
+)
 from .agda_review import (
     AgdaReviewRecord,
     _with_stored_review,
@@ -48,6 +58,12 @@ textarea { width: 95%; min-height: 30rem; font-family: ui-monospace, monospace; 
 .reader-preview pre { white-space: pre; overflow-x: auto; overflow-wrap: normal; }
 .reader-preview a[href^='/agda/'] { display: inline-block; margin: .15rem .35rem .65rem 0; padding: .2rem .5rem; border: 1px solid #174ea6; border-radius: .3rem; background: white; font-size: .85rem; text-decoration: none; }
 .missing-item { margin: 1rem 0; }
+.code-diff summary { cursor: pointer; font-weight: 600; }
+.code-diff pre { white-space: pre; overflow-x: auto; overflow-wrap: normal; }
+.diff-add, .diff-delete, .diff-context { display: block; }
+.diff-add { background: #dafbe1; color: #116329; }
+.diff-delete { background: #ffebe9; color: #82071e; }
+.diff-context { color: #57606a; }
 button { padding: .55rem .9rem; cursor: pointer; }
 table { width: 100%; border-collapse: collapse; } th, td { padding: .55rem; border-bottom: 1px solid #ddd; text-align: left; }
 .warning { border-left: .3rem solid #d93025; padding-left: .8rem; }
@@ -109,6 +125,24 @@ def render_index(
         "commentsOnly.addEventListener('change',filterItems);</script>"
     )
     return _layout("HoTT Rosetta review", body)
+
+
+def render_loading() -> str:
+    return _layout(
+        "HoTT Rosetta review",
+        "<section class='panel'><h2>Preparing the review workspace…</h2>"
+        "<p>The generated book, Agda blocks, provenance, and saved review state "
+        "are being indexed. This page will continue automatically.</p>"
+        "<p id='loading-status'><span class='badge pending'>Loading</span></p>"
+        "</section><script>async function checkReady(){try{"
+        "const response=await fetch('/status',{cache:'no-store'});"
+        "const status=await response.json();"
+        "if(status.status==='ready'){location.reload();return;}"
+        "if(status.status==='failed'){document.getElementById('loading-status').innerHTML="
+        "'<span class=\"badge failed\">Failed</span><pre></pre>';"
+        "document.querySelector('#loading-status pre').textContent=status.message;return;}"
+        "}catch(error){}setTimeout(checkReady,750);}checkReady();</script>",
+    )
 
 
 def render_file_index(paths: list[Path]) -> str:
@@ -227,8 +261,52 @@ def render_missing_agda(items: list[MissingAgdaItem]) -> str:
     )
 
 
+def render_agda_code_diff(record: AgdaReviewRecord) -> str:
+    """Render a collapsible source-to-Rosetta line diff."""
+
+    if not record.source_code:
+        content = "<p>No recorded agda-unimath source is available for comparison.</p>"
+    else:
+        source_lines = record.source_code.splitlines()
+        project_lines = record.project_code.splitlines()
+        matcher = difflib.SequenceMatcher(
+            None, source_lines, project_lines, autojunk=False
+        )
+        rows = []
+        for operation, source_start, source_end, project_start, project_end in matcher.get_opcodes():
+            if operation == "equal":
+                rows.extend(
+                    f"<span class='diff-context'>  {html.escape(line)}</span>"
+                    for line in source_lines[source_start:source_end]
+                )
+            if operation in {"delete", "replace"}:
+                rows.extend(
+                    f"<span class='diff-delete'>− {html.escape(line)}</span>"
+                    for line in source_lines[source_start:source_end]
+                )
+            if operation in {"insert", "replace"}:
+                rows.extend(
+                    f"<span class='diff-add'>+ {html.escape(line)}</span>"
+                    for line in project_lines[project_start:project_end]
+                )
+        if source_lines == project_lines:
+            content = "<p>The Rosetta block is identical to the recorded source.</p>"
+        else:
+            content = (
+                "<p><span class='diff-delete'>− agda-unimath</span> "
+                "<span class='diff-add'>+ Rosetta</span></p>"
+                f"<pre>{''.join(rows)}</pre>"
+            )
+    return (
+        "<details class='panel statement code-diff'>"
+        "<summary>Show highlighted Agda diff</summary>"
+        f"{content}</details>"
+    )
+
+
 def render_record(
-    record: AgdaReviewRecord, previous_id: str = "", next_id: str = "", token: str = ""
+    record: AgdaReviewRecord, previous_id: str = "", next_id: str = "", token: str = "",
+    scratchpad=None,
 ) -> str:
     navigation = ["<a href='/'>All blocks</a>"]
     if previous_id:
@@ -255,10 +333,15 @@ def render_record(
         f"{': ' if value.author else ''}{html.escape(value.text)}</li>"
         for value in record.comments
     )
-    check_message = (
-        f"<pre>{html.escape(record.typecheck_message)}</pre>"
-        if record.typecheck_message else ""
-    )
+    draft_status = scratchpad.status if scratchpad else "not-saved"
+    if record.typecheck_status == "passed":
+        check_message = (
+            "<p class='passed-message'>Agda accepted the complete candidate file.</p>"
+        )
+    elif record.typecheck_message:
+        check_message = f"<pre>{html.escape(record.typecheck_message)}</pre>"
+    else:
+        check_message = ""
     body = (
         f"<nav class='controls'>{navigation_html}</nav>"
         f"<h2>{html.escape(record.item_id)}</h2>"
@@ -292,8 +375,19 @@ def render_record(
         f"<section class='panel'><h3>Recorded source code</h3><p{warning_class}>{html.escape(source_note)}</p>"
         f"<p><strong>Location:</strong> {html.escape(record.source_location)}<br>"
         f"<strong>Commit:</strong> <code>{html.escape(record.source_commit)}</code></p>"
-        f"<pre>{html.escape(record.source_code)}</pre></section></div>"
+        f"<pre>{html.escape(record.source_code)}</pre></section>"
+        + ("" if is_missing else render_agda_code_diff(record))
+        + "</div>"
         f"<nav class='controls lower-navigation'>{navigation_html}</nav>"
+        + (
+            "" if is_missing else
+            f"<section class='panel'><h3>Edit Agda code</h3>"
+            f"<p><span class='badge {html.escape(draft_status)}'>Scratchpad: "
+            f"{html.escape(draft_status)}</span></p>"
+            f"<p><a href='/agda/{quote(record.block_id)}/edit'>Open scratchpad editor →</a></p>"
+            "</section>"
+        )
+        +
         f"<section class='panel review-comments'><h3>Existing comments</h3>"
         f"<ul>{comments or '<li>No comments yet.</li>'}</ul></section>"
         f"<form method='post' action='/agda/{quote(record.block_id)}'>"
@@ -315,6 +409,77 @@ def render_record(
     return _layout(f"Review {record.item_id}", body)
 
 
+def render_agda_editor(record: AgdaReviewRecord, token: str, scratchpad=None) -> str:
+    if record.provenance_kind == "missing":
+        raise ValueError("There is no candidate Agda block to edit")
+    draft_code = scratchpad.code if scratchpad else record.project_code
+    draft_note = scratchpad.adaptation_note if scratchpad else ""
+    draft_status = scratchpad.status if scratchpad else "not-saved"
+    if scratchpad and scratchpad.status == "failed" and scratchpad.message:
+        draft_message = f"<pre>{html.escape(scratchpad.message)}</pre>"
+    elif scratchpad and scratchpad.status == "passed":
+        draft_message = "<p class='passed-message'>Agda accepted this scratchpad draft.</p>"
+    else:
+        draft_message = ""
+    block = quote(record.block_id)
+    actions = (
+        f"<div class='controls'><form method='post' action='/agda/{block}/scratch-typecheck'>"
+        f"<input type='hidden' name='token' value='{html.escape(token)}'>"
+        "<button type='submit'>Typecheck scratchpad</button></form>"
+        f"<form method='post' action='/agda/{block}/scratch-promote'>"
+        f"<input type='hidden' name='token' value='{html.escape(token)}'>"
+        "<button type='submit'>Preview promotion</button></form>"
+        f"<form method='post' action='/agda/{block}/scratch-discard'>"
+        f"<input type='hidden' name='token' value='{html.escape(token)}'>"
+        "<button type='submit'>Discard scratchpad</button></form></div>"
+        if scratchpad else ""
+    )
+    return _layout(
+        f"Edit {record.item_id}",
+        f"<p><a href='/agda/{block}'>← Return to review</a></p>"
+        "<section class='panel'><h2>Agda scratchpad</h2>"
+        "<p>Save and typecheck a temporary draft without changing the curated "
+        "manifest or generated Rosetta. Only a passing draft can be promoted.</p>"
+        f"<p><span class='badge {html.escape(draft_status)}'>Scratchpad: "
+        f"{html.escape(draft_status)}</span></p>{draft_message}"
+        f"<form method='post' action='/agda/{block}/scratch-save'>"
+        f"<input type='hidden' name='token' value='{html.escape(token)}'>"
+        f"<textarea name='code' required>{html.escape(draft_code)}</textarea>"
+        "<p><label>Adaptation/source note<br>"
+        "<input name='adaptation_note' size='100' "
+        f"value='{html.escape(draft_note)}' "
+        "placeholder='Required at promotion when code differs from agda-unimath'></label></p>"
+        "<button type='submit'>Save scratchpad draft</button></form>"
+        f"{actions}</section>",
+    )
+
+
+def render_agda_edit_preview(
+    record: AgdaReviewRecord,
+    code: str,
+    adaptation_note: str,
+    manifest_diff: str,
+    manifest_digest: str,
+    provenance_kind: str,
+    token: str,
+) -> str:
+    return _layout(
+        f"Preview edit for {record.item_id}",
+        f"<p><a href='/agda/{quote(record.block_id)}/edit'>← Cancel and return to editor</a></p>"
+        "<section class='panel warning'><h2>Confirm curated Agda edit</h2>"
+        f"<p>The saved block will have <strong>{html.escape(provenance_kind)}</strong> provenance. "
+        "Confirming creates a backup, atomically updates the manifest, regenerates "
+        "the active document, and makes prior review evidence stale.</p>"
+        f"<pre>{html.escape(manifest_diff) if manifest_diff else 'No changes.'}</pre>"
+        f"<form method='post' action='/agda/{quote(record.block_id)}/edit-confirm'>"
+        f"<input type='hidden' name='token' value='{html.escape(token)}'>"
+        f"<input type='hidden' name='manifest_digest' value='{html.escape(manifest_digest)}'>"
+        f"<input type='hidden' name='adaptation_note' value='{html.escape(adaptation_note)}'>"
+        f"<textarea name='code' hidden>{html.escape(code)}</textarea>"
+        "<button type='submit'>Confirm and save Agda edit</button></form></section>",
+    )
+
+
 def run_block_typecheck(root: Path, block_id: str, records: list[AgdaReviewRecord]):
     matches = [record for record in records if record.block_id == block_id]
     if not matches:
@@ -326,16 +491,17 @@ def run_block_typecheck(root: Path, block_id: str, records: list[AgdaReviewRecor
 
 def make_handler(root: Path, token: str = ""):
     record_cache = {"stamp": None, "records": None}
+    initialization = {"status": "loading", "message": ""}
 
     def input_stamp():
         paths = [
             root / "data" / "project-layout.json",
             root / "data" / "rosetta-files.json",
-            root / "data" / "agda-blocks.json",
             root / "data" / "agda-coverage.json",
             root / "data" / "agda-gaps.json",
             root / "data" / "agda-reviews.json",
         ]
+        paths.extend(sorted((root / "data").glob("agda-blocks*.json")))
         paths.extend(active_files(root))
         return tuple(
             (str(path), path.stat().st_mtime_ns, path.stat().st_size)
@@ -352,6 +518,16 @@ def make_handler(root: Path, token: str = ""):
     def invalidate_records():
         record_cache["records"] = None
 
+    def initialize():
+        try:
+            review_records()
+            initialization["status"] = "ready"
+        except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as error:
+            initialization["status"] = "failed"
+            initialization["message"] = str(error)
+
+    threading.Thread(target=initialize, name="rosetta-review-loader", daemon=True).start()
+
     class ReviewHandler(BaseHTTPRequestHandler):
         def _send(self, status: int, content: str, content_type: str = "text/html; charset=utf-8"):
             encoded = content.encode()
@@ -364,15 +540,32 @@ def make_handler(root: Path, token: str = ""):
 
         def do_GET(self):
             try:
-                records = review_records()
                 path = urlparse(self.path).path
+                if path == "/status":
+                    self._send(
+                        200,
+                        json.dumps(initialization),
+                        "application/json; charset=utf-8",
+                    )
+                    return
                 if path == "/":
+                    if initialization["status"] == "loading":
+                        self._send(200, render_loading())
+                        return
+                    if initialization["status"] == "failed":
+                        self._send(500, _layout(
+                            "Review initialization failed",
+                            f"<p>{html.escape(initialization['message'])}</p>",
+                        ))
+                        return
+                    records = review_records()
                     files = active_files(root)
                     self._send(200, render_index(
                         records, len(files),
                         sum(record.provenance_kind == "missing" for record in records),
                     ))
                     return
+                records = review_records()
                 if path == "/missing-agda":
                     self._send(200, render_missing_agda(discover_missing_agda(root)))
                     return
@@ -394,6 +587,20 @@ def make_handler(root: Path, token: str = ""):
                         ),
                     )
                     return
+                if path.startswith("/agda/") and path.endswith("/edit"):
+                    block_id = unquote(
+                        path.removeprefix("/agda/").removesuffix("/edit")
+                    )
+                    matches = [
+                        record for record in records if record.block_id == block_id
+                    ]
+                    if not matches:
+                        self._send(404, _layout("Not found", "<p>Agda block not found.</p>"))
+                        return
+                    self._send(200, render_agda_editor(
+                        matches[0], token, load_scratchpad(root, block_id)
+                    ))
+                    return
                 if path.startswith("/agda/"):
                     block_id = unquote(path.removeprefix("/agda/"))
                     ids = [record.block_id for record in records]
@@ -404,6 +611,7 @@ def make_handler(root: Path, token: str = ""):
                     self._send(200, render_record(
                         records[index], ids[index - 1] if index else "",
                         ids[index + 1] if index + 1 < len(ids) else "", token,
+                        load_scratchpad(root, block_id),
                     ))
                     return
                 self._send(404, _layout("Not found", "<p>Page not found.</p>"))
@@ -427,6 +635,83 @@ def make_handler(root: Path, token: str = ""):
                     run_block_typecheck(root, block_id, records)
                     invalidate_records()
                     self._redirect("/agda/" + quote(block_id))
+                    return
+                if path.startswith("/agda/") and path.endswith("/edit-preview"):
+                    block_id = unquote(
+                        path.removeprefix("/agda/").removesuffix("/edit-preview")
+                    )
+                    records = review_records()
+                    matches = [record for record in records if record.block_id == block_id]
+                    if not matches or matches[0].provenance_kind == "missing":
+                        raise ValueError(f"Editable Agda block not found: {block_id}")
+                    code = form.get("code", [""])[0]
+                    note = form.get("adaptation_note", [""])[0]
+                    edit = preview_agda_block_edit(root, block_id, code, note)
+                    self._send(200, render_agda_edit_preview(
+                        matches[0], code, note, edit.preview.diff,
+                        edit.preview.original_digest, edit.provenance_kind, token,
+                    ))
+                    return
+                if path.startswith("/agda/") and path.endswith("/edit-confirm"):
+                    block_id = unquote(
+                        path.removeprefix("/agda/").removesuffix("/edit-confirm")
+                    )
+                    draft = promotion_scratchpad(root, block_id)
+                    if form.get("code", [""])[0].rstrip("\n") != draft.code:
+                        raise ValueError("The promotion form does not match the passing draft")
+                    if form.get("adaptation_note", [""])[0].strip() != draft.adaptation_note:
+                        raise ValueError("The promotion note does not match the passing draft")
+                    apply_agda_block_edit(
+                        root,
+                        block_id,
+                        form.get("code", [""])[0],
+                        form.get("adaptation_note", [""])[0],
+                        form.get("manifest_digest", [""])[0],
+                    )
+                    discard_scratchpad(root, block_id)
+                    invalidate_records()
+                    self._redirect("/agda/" + quote(block_id))
+                    return
+                if path.startswith("/agda/") and path.endswith("/scratch-save"):
+                    block_id = unquote(
+                        path.removeprefix("/agda/").removesuffix("/scratch-save")
+                    )
+                    save_scratchpad(
+                        root, block_id, form.get("code", [""])[0],
+                        form.get("adaptation_note", [""])[0],
+                    )
+                    self._redirect("/agda/" + quote(block_id) + "/edit")
+                    return
+                if path.startswith("/agda/") and path.endswith("/scratch-typecheck"):
+                    block_id = unquote(
+                        path.removeprefix("/agda/").removesuffix("/scratch-typecheck")
+                    )
+                    run_scratchpad_typecheck(root, block_id)
+                    self._redirect("/agda/" + quote(block_id) + "/edit")
+                    return
+                if path.startswith("/agda/") and path.endswith("/scratch-promote"):
+                    block_id = unquote(
+                        path.removeprefix("/agda/").removesuffix("/scratch-promote")
+                    )
+                    draft = promotion_scratchpad(root, block_id)
+                    records = review_records()
+                    matches = [record for record in records if record.block_id == block_id]
+                    if not matches:
+                        raise ValueError(f"Agda block not found: {block_id}")
+                    edit = preview_agda_block_edit(
+                        root, block_id, draft.code, draft.adaptation_note
+                    )
+                    self._send(200, render_agda_edit_preview(
+                        matches[0], draft.code, draft.adaptation_note, edit.preview.diff,
+                        edit.preview.original_digest, edit.provenance_kind, token,
+                    ))
+                    return
+                if path.startswith("/agda/") and path.endswith("/scratch-discard"):
+                    block_id = unquote(
+                        path.removeprefix("/agda/").removesuffix("/scratch-discard")
+                    )
+                    discard_scratchpad(root, block_id)
+                    self._redirect("/agda/" + quote(block_id) + "/edit")
                     return
                 if path.startswith("/agda/"):
                     block_id = unquote(path.removeprefix("/agda/"))

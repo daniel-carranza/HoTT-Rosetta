@@ -26,9 +26,11 @@ def load_typechecks(root: Path) -> dict:
     return value
 
 
-def candidate_for_destination(root: Path, destination: str) -> tuple[str, str]:
+def candidate_for_destination(
+    root: Path, destination: str, blocks=None
+) -> tuple[str, str]:
     sections = inventory(root / "book")
-    blocks = load_manifest(root / "data" / "agda-blocks.json")
+    blocks = blocks or load_manifest(root / "data" / "agda-blocks.json")
     section_match = re.match(r"section-(\d+)-(\d+)-", destination)
     if section_match:
         chapter, subsection = map(int, section_match.groups())

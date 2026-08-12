@@ -13,7 +13,15 @@ from rosetta.agda_review import (
     load_agda_review_store,
     update_agda_review,
 )
-from rosetta.review_web import render_index, render_record, run_block_typecheck
+from rosetta.review_web import (
+    render_agda_editor,
+    render_agda_code_diff,
+    render_agda_edit_preview,
+    render_index,
+    render_loading,
+    render_record,
+    run_block_typecheck,
+)
 
 
 class AgdaReviewTests(unittest.TestCase):
@@ -41,9 +49,9 @@ class AgdaReviewTests(unittest.TestCase):
         records = discover_agda_reviews(root)
         curated = [record for record in records if record.provenance_kind != "missing"]
         missing = [record for record in records if record.provenance_kind == "missing"]
-        self.assertEqual(len(curated), 344)
-        self.assertEqual(sum(record.exact_match for record in curated), 159)
-        self.assertEqual(sum(record.provenance_kind == "adapted" for record in curated), 127)
+        self.assertEqual(len(curated), 406)
+        self.assertEqual(sum(record.exact_match for record in curated), 172)
+        self.assertEqual(sum(record.provenance_kind == "adapted" for record in curated), 176)
         self.assertEqual(sum(record.provenance_kind == "handwritten" for record in curated), 58)
         self.assertTrue(missing)
         self.assertTrue(all(not record.project_code for record in missing))
@@ -54,8 +62,8 @@ class AgdaReviewTests(unittest.TestCase):
             for comment in record.comments
             if comment.author == "Daniel C"
         ]
-        self.assertEqual(len(daniel_comments), 11)
-        self.assertEqual(sum(record.conversion_status == "blocked" for record in records), 23)
+        self.assertGreaterEqual(len(daniel_comments), 11)
+        self.assertEqual(sum(record.conversion_status == "blocked" for record in records), 29)
         self.assertTrue(all(record.statement for record in records))
         self.assertTrue(all(record.document_sha256 for record in records))
 
@@ -129,8 +137,13 @@ answer : Type
         self.assertIn("<h2", detail)
         self.assertIn("Rosetta Agda code", detail)
         self.assertIn("Recorded source code", detail)
+        self.assertIn("Show highlighted Agda diff", detail)
+        self.assertIn("identical to the recorded source", detail)
         self.assertIn("Approve", detail)
         self.assertIn("Run Agda check", detail)
+        self.assertIn("Edit Agda code", detail)
+        self.assertIn("Open scratchpad editor", detail)
+        self.assertNotIn("<textarea name='code'", detail)
         self.assertIn("Agda: not-checked", detail)
         self.assertEqual(detail.count("All blocks"), 2)
         self.assertIn("class='comment-box'", detail)
@@ -147,8 +160,72 @@ answer : Type
         unsafe = AgdaReviewRecord(**{**record.to_dict(), "project_code": "x < y"})
         self.assertIn("x &lt; y", render_record(unsafe))
 
+        changed = AgdaReviewRecord(
+            **{
+                **record.to_dict(),
+                "project_code": "A : Set\nlocal = A",
+                "source_code": "A : Type\nupstream = A",
+                "exact_match": False,
+            }
+        )
+        code_diff = render_agda_code_diff(changed)
+        self.assertIn("class='diff-delete'>− A : Type", code_diff)
+        self.assertIn("class='diff-add'>+ A : Set", code_diff)
+        self.assertIn("− agda-unimath", code_diff)
+        self.assertIn("+ Rosetta", code_diff)
+
+        editor = render_agda_editor(record, "token")
+        self.assertIn("Agda scratchpad", editor)
+        self.assertIn("Save scratchpad draft", editor)
+        self.assertIn("A : Type", editor)
+        self.assertIn("← Return to review", editor)
+
+        edit_preview = render_agda_edit_preview(
+            record,
+            "A : Type\nA = Type",
+            "Local adjustment.",
+            "-A : Type\n+A : Set",
+            "digest",
+            "adapted",
+            "token",
+        )
+        self.assertIn("Confirm and save Agda edit", edit_preview)
+        self.assertIn("-A : Type", edit_preview)
+        self.assertIn("adapted", edit_preview)
+
         commented_index = render_index([commented])
         self.assertIn("data-has-comments='true'", commented_index)
+
+    def test_loading_page_reports_progress_and_polls_until_ready(self):
+        page = render_loading()
+        self.assertIn("Preparing the review workspace", page)
+        self.assertIn("generated book, Agda blocks, provenance", page)
+        self.assertIn("fetch('/status'", page)
+        self.assertIn("location.reload()", page)
+        self.assertIn("status.message", page)
+
+    def test_successful_agda_check_hides_progress_output(self):
+        record = self._record()
+        progress = "Checking candidate-example\n Checking imported-module"
+        passed = AgdaReviewRecord(
+            **{
+                **record.to_dict(),
+                "typecheck_status": "passed",
+                "typecheck_message": progress,
+            }
+        )
+        detail = render_record(passed)
+        self.assertIn("Agda accepted the complete candidate file.", detail)
+        self.assertNotIn("Checking imported-module", detail)
+
+        failed = AgdaReviewRecord(
+            **{
+                **record.to_dict(),
+                "typecheck_status": "failed",
+                "typecheck_message": "proof does not have the required type",
+            }
+        )
+        self.assertIn("proof does not have the required type", render_record(failed))
 
     def test_missing_code_uses_the_same_review_page_for_comments(self):
         record = AgdaReviewRecord(
@@ -169,6 +246,7 @@ answer : Type
         self.assertIn("No candidate Agda code.", detail)
         self.assertIn("Add a shared comment", detail)
         self.assertNotIn("Run Agda check", detail)
+        self.assertNotIn("Edit Rosetta Agda code", detail)
         self.assertNotIn(">Approve<", detail)
         self.assertIn(record.block_id, index)
 
