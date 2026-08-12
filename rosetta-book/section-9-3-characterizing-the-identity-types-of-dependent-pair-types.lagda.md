@@ -2,6 +2,17 @@
 
 ```agda
 module section-9-3-characterizing-the-identity-types-of-dependent-pair-types where
+
+open import universe-levels
+open import section-2-2-ordinary-function-types
+open import section-4-4-coproducts
+open import section-4-6-dependent-pair-types
+open import section-5-1-the-inductive-definition-of-identity-types
+open import section-5-2-the-groupoidal-structure-of-types
+open import section-5-3-the-action-on-identifications-of-functions
+open import section-5-4-transport
+open import section-9-1-homotopies
+open import section-9-2-bi-invertible-maps
 ```
 
 <!-- rosetta-item: section-9.3 -->
@@ -43,6 +54,17 @@ tr_B(α,y)=y'.
 Thus it makes sense to think of `(x,y)` to be identical to `(x',y')` if there is an identification `α:x=x'` and an identification `β:tr_B(α,y)=y'`.
 In the following definition we turn this idea into a binary relation on the `Σ`-type.
 
+<!-- rosetta-agda-block: section-9.3-transport-action -->
+
+```agda
+tr-ap :
+  {l1 l2 l3 l4 : Level} {A : Type l1} {B : A → Type l2} {C : Type l3} {D : C → Type l4}
+  (f : A → C) (g : (x : A) → B x → D (f x))
+  {x y : A} (p : x ＝ y) (z : B x) →
+  tr D (ap f p) (g x z) ＝ g y (tr B p z)
+tr-ap f g refl z = refl
+```
+
 ## Definition 9.3.1
 
 <!-- rosetta-item: definition-9.3.1 -->
@@ -54,6 +76,18 @@ Eq-Σ : (Σ(x:A) B(x))→(Σ(x:A) B(x))→𝒰
 by defining
 ```text
 Eq-Σ(s,t)≔Σ(α:pr 1(s)=pr 1(t)) tr_B(α,pr 2(s))=pr 2 (t).
+```
+
+<!-- rosetta-agda-block: definition-9.3.1-equality-sigma -->
+
+```agda
+module _
+  {l1 l2 : Level} {A : Type l1} {B : A → Type l2}
+  where
+
+  Eq-Σ : (s t : Σ A B) → Type (l1 ⊔ l2)
+  Eq-Σ s t =
+    Σ (pr1 s ＝ pr1 t) (λ α → dependent-identification B α (pr2 s) (pr2 t))
 ```
 
 ## Lemma 9.3.2
@@ -76,6 +110,13 @@ Thus, it suffices to construct a dependent function of type
 ```
 Here we take `λ x. λ y. (refl,refl)`.
 
+<!-- rosetta-agda-block: lemma-9.3.2-reflexivity -->
+
+```agda
+  refl-Eq-Σ : (s : Σ A B) → Eq-Σ s s
+  refl-Eq-Σ s = refl , refl
+```
+
 ## Definition 9.3.3
 
 <!-- rosetta-item: definition-9.3.3 -->
@@ -86,6 +127,21 @@ Then for any `s,t:Σ(x:A) B(x)` we define a map
 pair-eq: (s=t)→ Eq-Σ(s,t)
 ```
 by path induction, taking `pair-eq(refl)≔reflexive-Eq-Σ(s)`.
+
+<!-- rosetta-agda-block: definition-9.3.3-pair-equality -->
+
+```agda
+  eq-base-eq-pair : {s t : Σ A B} → s ＝ t → pr1 s ＝ pr1 t
+  eq-base-eq-pair = ap pr1
+
+  dependent-identification-eq-pair :
+    {s t : Σ A B} (p : s ＝ t) →
+    dependent-identification B (eq-base-eq-pair p) (pr2 s) (pr2 t)
+  dependent-identification-eq-pair {s} p = tr-ap pr1 (λ x _ → pr2 x) p (pr1 s)
+
+  pair-eq-Σ : {s t : Σ A B} → s ＝ t → Eq-Σ s t
+  pair-eq-Σ p = eq-base-eq-pair p , dependent-identification-eq-pair p
+```
 
 ## Theorem 9.3.4
 
@@ -148,3 +204,67 @@ Now we proceed by `Σ`-induction on `s:Σ(x:A) B(x)`, so it suffices to construc
 eq-pair(refl,refl)=refl.
 ```
 Since `eq-pair(refl,refl)` computes to `refl`, we may simply take `refl{refl}`. ◻
+
+<!-- rosetta-agda-block: theorem-9.3.4-inverse-map -->
+
+```agda
+  eq-pair-eq-base :
+    {x y : A} {s : B x} (p : x ＝ y) → (x , s) ＝ (y , tr B p s)
+  eq-pair-eq-base refl = refl
+
+  eq-pair-eq-base' :
+    {x y : A} {t : B y} (p : x ＝ y) → (x , tr B (inv p) t) ＝ (y , t)
+  eq-pair-eq-base' refl = refl
+
+  eq-pair-eq-fiber :
+    {x : A} {s t : B x} → s ＝ t → (x , s) ＝ (x , t)
+  eq-pair-eq-fiber {x} = ap {B = Σ A B} (pair x)
+
+  eq-pair-Σ :
+    {s t : Σ A B}
+    (α : pr1 s ＝ pr1 t) →
+    dependent-identification B α (pr2 s) (pr2 t) → s ＝ t
+  eq-pair-Σ refl = eq-pair-eq-fiber
+
+  eq-pair-Σ' : {s t : Σ A B} → Eq-Σ s t → s ＝ t
+  eq-pair-Σ' p = eq-pair-Σ (pr1 p) (pr2 p)
+```
+
+<!-- rosetta-agda-block: theorem-9.3.4-equivalence-proof -->
+
+```agda
+  ap-pr1-eq-pair-eq-fiber :
+    {x : A} {s t : B x} (p : s ＝ t) → ap pr1 (eq-pair-eq-fiber p) ＝ refl
+  ap-pr1-eq-pair-eq-fiber refl = refl
+
+  is-retraction-pair-eq-Σ :
+    (s t : Σ A B) → pair-eq-Σ {s} {t} ∘ eq-pair-Σ' {s} {t} ~ id {A = Eq-Σ s t}
+  is-retraction-pair-eq-Σ (x , y) (.x , .y) (refl , refl) = refl
+
+  is-section-pair-eq-Σ :
+    (s t : Σ A B) → eq-pair-Σ' {s} {t} ∘ pair-eq-Σ {s} {t} ~ id
+  is-section-pair-eq-Σ (x , y) .(x , y) refl = refl
+
+  abstract
+    is-equiv-eq-pair-Σ : (s t : Σ A B) → is-equiv (eq-pair-Σ' {s} {t})
+    is-equiv-eq-pair-Σ s t =
+      is-equiv-is-invertible
+        ( pair-eq-Σ)
+        ( is-section-pair-eq-Σ s t)
+        ( is-retraction-pair-eq-Σ s t)
+
+  equiv-eq-pair-Σ : (s t : Σ A B) → Eq-Σ s t ≃ (s ＝ t)
+  pr1 (equiv-eq-pair-Σ s t) = eq-pair-Σ'
+  pr2 (equiv-eq-pair-Σ s t) = is-equiv-eq-pair-Σ s t
+
+  abstract
+    is-equiv-pair-eq-Σ : (s t : Σ A B) → is-equiv (pair-eq-Σ {s} {t})
+    is-equiv-pair-eq-Σ s t =
+      is-equiv-is-invertible
+        ( eq-pair-Σ')
+        ( is-retraction-pair-eq-Σ s t)
+        ( is-section-pair-eq-Σ s t)
+
+  equiv-pair-eq-Σ : (s t : Σ A B) → (s ＝ t) ≃ Eq-Σ s t
+  equiv-pair-eq-Σ s t = (pair-eq-Σ , is-equiv-pair-eq-Σ s t)
+```

@@ -15,7 +15,7 @@ from rosetta.agda_manifest import (
 class AgdaManifestTests(unittest.TestCase):
     def test_repository_manifest_is_valid(self):
         root = Path(__file__).resolve().parent.parent
-        self.assertEqual(len(load_manifest(root / "data" / "agda-blocks.json")), 344)
+        self.assertEqual(len(load_manifest(root / "data" / "agda-blocks.json")), 406)
 
     def test_manifest_includes_local_blocks(self):
         with tempfile.TemporaryDirectory() as directory:

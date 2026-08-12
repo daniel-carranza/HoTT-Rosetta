@@ -129,7 +129,7 @@ For any `k:ℕ`, we define the map `[_]_{k+1}:ℕ→Fin{k+1}` recursively on `x`
 [x+1]_{k+1} ≔ succ-Fin_{k+1}[x]_{k+1}.
 ```
 
-Our next intermediate goal is to show that `x≃ nat-Fin[x]_{k+1}mod k+1` for any natural number `x`.
+Our next intermediate goal is to show that `x≡ nat-Fin[x]_{k+1}mod k+1` for any natural number `x`.
 This fact is a consequence of the following simple lemma, that will help us compute with the maps `nat-Fin : Fin{k}→ℕ`.
 
 <!-- rosetta-agda-block: definition-7.4.3-mod-succ-natural-numbers -->
@@ -166,7 +166,7 @@ nat-Fin(skip-zero-Fin_k(x)) = nat-Fin(x)+1.
 3.  For any `k:ℕ` and any `x:Fin{k}`, we have
 
 ```text
-nat-Fin(succ-Fin_k(x)) ≃ nat-Fin(x)+1 mod k.
+nat-Fin(succ-Fin_k(x)) ≡ nat-Fin(x)+1 mod k.
 ```
 
 ### Proof
@@ -185,10 +185,10 @@ For the second claim, we define an identification `β_k(x):nat-Fin(skip-zero-Fin
 β_{k+1}(i(x)) ≔ β_k(x)
 β_{k+1}(⋆) ≔ refl.
 ```
-For the third claim, we again define an element `γ_k(x):nat-Fin(succ-Fin_k(x)) ≃ nat-Fin(x)+1mod{k}` recursively.
+For the third claim, we again define an element `γ_k(x):nat-Fin(succ-Fin_k(x)) ≡ nat-Fin(x)+1mod{k}` recursively.
 To obtain
 ```text
-γ_{k+1}(i(x)) : nat-Fin(succ-Fin_{k+1}(i(x))) ≃nat-Fin(i(x))+1mod{k+1},
+γ_{k+1}(i(x)) : nat-Fin(succ-Fin_{k+1}(i(x))) ≡nat-Fin(i(x))+1mod{k+1},
 ```
 we calculate
 ```text
@@ -198,13 +198,13 @@ nat-Fin(succ-Fin_{k+1}(i(x))) ≐ nat-Fin(skip-zero-Fin(x))  by definition of su
 Since the congruence relation modulo `k+1` is reflexive, we obtain `γ_{k+1}(i(x))` from the identification of the above calculation.
 To obtain
 ```text
-γ_{k+1}(⋆) : nat-Fin(succ-Fin_{k+1}(⋆)) ≃ nat-Fin(⋆)+1mod{k+1},
+γ_{k+1}(⋆) : nat-Fin(succ-Fin_{k+1}(⋆)) ≡ nat-Fin(⋆)+1mod{k+1},
 ```
 we calculate
 ```text
 nat-Fin(succ-Fin_{k+1}(⋆)) ≐ nat-Fin(0)  by definition of succ-Fin
 = 0  by claim (i)
-≃ k+1  \text{by \cref{rmk:elementary-facts-div}}
+≡ k+1  \text{by \cref{rmk:elementary-facts-div}}
 ≐ nat-Fin(⋆)+1  by definition of nat-Fin.
 ```
  ◻
@@ -234,7 +234,7 @@ nat-succ-Fin k x = nat-skip-zero-Fin k x
 
 For any `x:ℕ` we have
 ```text
-nat-Fin[x]_{k+1}≃ x mod k+1.
+nat-Fin[x]_{k+1}≡ x mod k+1.
 ```
 
 ### Proof
@@ -244,18 +244,18 @@ nat-Fin[x]_{k+1}≃ x mod k+1.
 *Proof.* The proof by induction on `x`.
 The fact that
 ```text
-nat-Fin[0]_{k+1}≃ 0 mod {k+1}
+nat-Fin[0]_{k+1}≡ 0 mod {k+1}
 ```
 is immediate from the fact that `nat-Fin[0]_{k+1}≐nat-Fin(0)=0`, which was shown in Lemma 7.4.4.
 In the inductive step, we have to show that
 ```text
-nat-Fin[x+1]_{k+1}≃ x+1mod k+1.
+nat-Fin[x+1]_{k+1}≡ x+1mod k+1.
 ```
 This follows from the following computation
 ```text
 nat-Fin[x+1]_{k+1} ≐ nat-Fin(succ-Fin_{k+1}[x]_{k+1})  by definition of [_]_{k+1}
-≃ nat-Fin[x]_{k+1}+1  \text{by \cref{lem:nat-Fin}}
-≃ x+1  by the inductive hypothesis.
+≡ nat-Fin[x]_{k+1}+1  \text{by \cref{lem:nat-Fin}}
+≡ x+1  by the inductive hypothesis.
 ```
  ◻
 
@@ -272,7 +272,9 @@ cong-nat-succ-Fin :
   (k : ℕ) (x : Fin k) →
   cong-ℕ k (nat-Fin k (succ-Fin k x)) (succ-ℕ (nat-Fin k x))
 cong-nat-succ-Fin (succ-ℕ k) (inl x) =
-  cong-identification-ℕ (succ-ℕ k) (nat-succ-Fin k x)
+  cong-identification-ℕ
+    (succ-ℕ k)
+    (nat-succ-Fin k x)
 cong-nat-succ-Fin (succ-ℕ k) (inr star) =
   tr (λ z → cong-ℕ (succ-ℕ k) z (succ-ℕ k)) (inv (is-zero-nat-zero-Fin {k}))
     (symmetric-cong-ℕ (succ-ℕ k) (succ-ℕ k) zero-ℕ (cong-zero-ℕ (succ-ℕ k)))
@@ -302,7 +304,7 @@ d| x↔ x=0.
 ```
 Consequently, for any two natural numbers `x` and `y` such that `dist-ℕ(x,y)<k`, we have
 ```text
-x≃ ymod k↔ x=y.
+x≡ ymod k↔ x=y.
 ```
 
 ### Proof
@@ -330,10 +332,10 @@ d≤ dk'+ d≐ dk = x+1.
 
 ```agda
 abstract
-  is-zero-div-below-ℕ :
+  is-zero-div-ℕ :
     (d x : ℕ) → le-ℕ x d → div-ℕ d x → is-zero-ℕ x
-  is-zero-div-below-ℕ d zero-ℕ H D = refl
-  is-zero-div-below-ℕ d (succ-ℕ x) H (pair (succ-ℕ k) p) =
+  is-zero-div-ℕ d zero-ℕ H D = refl
+  is-zero-div-ℕ d (succ-ℕ x) H (pair (succ-ℕ k) p) =
     ex-falso
       ( contradiction-le-ℕ
         ( succ-ℕ x) d H
@@ -355,7 +357,7 @@ abstract
 eq-cong-le-dist-ℕ :
   (k x y : ℕ) → le-ℕ (dist-ℕ x y) k → cong-ℕ k x y → x ＝ y
 eq-cong-le-dist-ℕ k x y H K =
-  eq-dist-ℕ x y (is-zero-div-below-ℕ k (dist-ℕ x y) H K)
+  eq-dist-ℕ x y (is-zero-div-ℕ k (dist-ℕ x y) H K)
 
 eq-cong-le-ℕ :
   (k x y : ℕ) → le-ℕ x k → le-ℕ y k → cong-ℕ k x y → x ＝ y
@@ -378,7 +380,7 @@ eq-cong-nat-Fin (succ-ℕ k) x y H =
 Consider a natural number `k`.
 Then we have
 ```text
-[x]_{k+1}=[y]_{k+1} ↔ x≃ ymod k+1,
+[x]_{k+1}=[y]_{k+1} ↔ x≡ ymod k+1,
 ```
 for any `x,y:ℕ`.
 
@@ -392,9 +394,9 @@ for any `x,y:ℕ`.
 ```
 Since the inequalities `nat-Fin[x]_{k+1}<k+1` and `nat-Fin[y]_{k+1}<k+1` hold by Lemma 7.3.5, it follows by Proposition 7.4.6 that
 ```text
-nat-Fin[x]_{k+1}=nat-Fin[y]_{k+1}↔ nat-Fin[x]_{k+1}≃nat-Fin[y]_{k+1}mod k+1.
+nat-Fin[x]_{k+1}=nat-Fin[y]_{k+1}↔ nat-Fin[x]_{k+1}≡nat-Fin[y]_{k+1}mod k+1.
 ```
-The latter condition is by Proposition 7.4.5 equivalent to the condition that `x≃ ymod k+1`. ◻
+The latter condition is by Proposition 7.4.5 equivalent to the condition that `x≡ ymod k+1`. ◻
 
 <!-- rosetta-agda-block: theorem-7.4.7-effectiveness-mod-successor-adapted -->
 
@@ -450,7 +452,7 @@ nat-Fin[nat-Fin(x)]_{k+1}=nat-Fin(x).
 Now observe that `nat-Fin[nat-Fin(x)]_{k+1}<k+1` and `nat-Fin(x)<k+1`.
 By Proposition 7.4.6 it therefore suffices to show that
 ```text
-nat-Fin[nat-Fin(x)]_{k+1}≃nat-Fin(x)mod{k+1}.
+nat-Fin[nat-Fin(x)]_{k+1}≡nat-Fin(x)mod{k+1}.
 ```
 This fact is an instance of Proposition 7.4.5. ◻
 

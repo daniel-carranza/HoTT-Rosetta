@@ -2,6 +2,18 @@
 
 ```agda
 module section-10-2-singleton-induction where
+
+open import universe-levels
+open import section-2-2-ordinary-function-types
+open import section-4-2-the-unit-type
+open import section-4-6-dependent-pair-types
+open import section-5-1-the-inductive-definition-of-identity-types
+open import section-5-2-the-groupoidal-structure-of-types
+open import section-5-3-the-action-on-identifications-of-functions
+open import section-5-4-transport
+open import section-9-1-homotopies
+open import section-9-2-bi-invertible-maps
+open import section-10-1-contractible-types
 ```
 
 <!-- rosetta-item: section-10.2 -->
@@ -26,6 +38,25 @@ In other words, if `A` satisfies singleton induction we have a function and a ho
 \singcomp_{a} : ev-pt∘ \singind_{a} ~ id
 ```
 for any type family `B` over `A`.
+
+<!-- rosetta-agda-block: definition-10.2.1-singleton-induction -->
+
+```agda
+is-singleton :
+  (l1 : Level) {l2 : Level} (A : Type l2) → A → Type (lsuc l1 ⊔ l2)
+is-singleton l A a = (B : A → Type l) → section (ev-point a {B})
+
+ind-is-singleton :
+  {l1 l2 : Level} {A : Type l1} (a : A) →
+  ({l : Level} → is-singleton l A a) → (B : A → Type l2) →
+  B a → (x : A) → B x
+ind-is-singleton a is-sing-A B = pr1 (is-sing-A B)
+
+compute-ind-is-singleton :
+  {l1 l2 : Level} {A : Type l1} (a : A) (H : {l : Level} → is-singleton l A a) →
+  (B : A → Type l2) → (ev-point a {B} ∘ ind-is-singleton a H B) ~ id
+compute-ind-is-singleton a H B = pr2 (H B)
+```
 
 ## Example 10.2.2
 
@@ -100,3 +131,44 @@ By singleton induction applied to `B(x)≔ a=x` we have the map
 ind-sing_{a} : a=a → Π(x:A) a=x.
 ```
 Therefore `ind-sing_{a}(refl)` is a contraction. ◻
+
+<!-- rosetta-agda-block: theorem-10.2.3-contractible-singleton-induction -->
+
+```agda
+ind-singleton :
+  {l1 l2 : Level} {A : Type l1} (a : A) (is-contr-A : is-contr A)
+  (B : A → Type l2) → B a → (x : A) → B x
+ind-singleton a is-contr-A B b x =
+  tr B (inv (contraction is-contr-A a) ∙ contraction is-contr-A x) b
+
+compute-ind-singleton :
+  {l1 l2 : Level} {A : Type l1}
+  (a : A) (is-contr-A : is-contr A) (B : A → Type l2) →
+  (ev-point a {B} ∘ ind-singleton a is-contr-A B) ~ id
+compute-ind-singleton a is-contr-A B b =
+  ap (λ p → tr B p b) (left-inv (contraction is-contr-A a))
+```
+
+<!-- rosetta-agda-block: theorem-10.2.3-singleton-induction-iff-contractible -->
+
+```agda
+is-singleton-is-contr :
+  {l1 l2 : Level} {A : Type l1} (a : A) → is-contr A → is-singleton l2 A a
+pr1 (is-singleton-is-contr a is-contr-A B) =
+  ind-singleton a is-contr-A B
+pr2 (is-singleton-is-contr a is-contr-A B) =
+  compute-ind-singleton a is-contr-A B
+
+abstract
+  is-contr-ind-singleton :
+    {l1 : Level} (A : Type l1) (a : A) →
+    ({l2 : Level} (B : A → Type l2) → B a → (x : A) → B x) → is-contr A
+  pr1 (is-contr-ind-singleton A a S) = a
+  pr2 (is-contr-ind-singleton A a S) = S (λ x → a ＝ x) refl
+
+abstract
+  is-contr-is-singleton :
+    {l1 : Level} (A : Type l1) (a : A) →
+    ({l2 : Level} → is-singleton l2 A a) → is-contr A
+  is-contr-is-singleton A a S = is-contr-ind-singleton A a (pr1 ∘ S)
+```
