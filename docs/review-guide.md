@@ -1,58 +1,22 @@
-# Reviewing Agda code
+# Review UI
 
-The review program is optional. Conversion works without it.
+Run `python3 rosetta.py review --web`, open the printed local address, and stop
+the server with `Ctrl-C`. The loading page remains visible while review data is
+indexed. Review is optional and never gates conversion or ordinary checks.
 
-## Start the review program
+Each Agda page shows the book statement, Rosetta code, recorded agda-unimath
+source and provenance, typecheck state, comments, and a collapsible highlighted
+diff. Reviewers may approve, reject, or comment; changed content makes earlier
+decisions stale. Records are stored in `data/agda-reviews.json`.
 
-From the project directory, run:
+Use **Open scratchpad editor** to edit an existing block temporarily. Save the
+draft, typecheck the overlaid destination, and preview promotion. Only the exact
+passing draft can be promoted. Confirmation creates a backup, updates the
+appropriate `data/agda-blocks*.json`, regenerates the destination, and clears
+the draft. Adapted code requires a concise note.
 
-```text
-python3 rosetta.py review --web
-```
+Missing-code pages accept comments but cannot be approved, edited, or
+typechecked. Current policy forbids adding handwritten replacement blocks.
 
-Open the address printed in the terminal, normally:
-
-```text
-http://127.0.0.1:8765/
-```
-
-Press `Ctrl-C` in the terminal when you are finished.
-
-## What the page shows
-
-Each review page contains three parts:
-
-1. The statement or proof from the book.
-2. The Agda code used by this project.
-3. The recorded code from agda-unimath, including its file, lines, and commit.
-
-An **exact** block is a byte-for-byte copy of the recorded source. An
-**adapted** block was changed for this project. Adapted blocks are clearly
-marked and must not be treated as exact copies.
-
-You can approve or reject a block, add a shared comment, and move to the next
-or previous block. Decisions are saved in `data/agda-reviews.json` so they can
-be shared with collaborators.
-
-Numbered items without candidate Agda code use the same review page. They show
-empty code and a **missing** label, and accept comments about useful upstream
-search results. They cannot be approved, rejected, or typechecked until code is
-supplied.
-
-## Viewing generated files
-
-Choose **Read generated .lagda.md files** on the review home page. The browser
-lists the active files from the directory configured in
-`data/project-layout.json` and displays their complete current contents.
-Generated documents are read-only here; durable changes belong in the converter
-or its curated data.
-
-If the book statement, project code, or recorded source changes, an earlier
-decision becomes **stale** and must be reviewed again.
-
-## Current coverage
-
-Curated blocks appear automatically from `data/agda-blocks.json`. Numbered
-items without curated code also appear automatically unless the
-file's required coverage has been explicitly confirmed in
-`data/agda-coverage.json`.
+The file reader displays active generated files read-only. Durable changes
+belong in converter code or curated data followed by regeneration.

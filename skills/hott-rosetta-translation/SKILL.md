@@ -1,93 +1,52 @@
 ---
 name: hott-rosetta-translation
-description: Convert HoTT book LaTeX into generated literate Agda Markdown, improve section prose or formalization, curate provenance-backed agda-unimath blocks, and maintain the optional review workflow in the HoTT-Rosetta repository.
+description: Convert HoTT book LaTeX, curate provenance-backed Agda, and maintain the optional review workflow.
 ---
 
-# HoTT-Rosetta Translation
+# HoTT Rosetta translation
 
-## Core workflow
+## Start
 
-1. Read `AGENTS.md`, `docs/implementation-handoff.md`, and
-   `docs/conversion-contract.md` completely.
-2. Read only the references relevant to the task:
-   - section work: `references/section-files.md` and
-     `references/latex-to-markdown.md`;
-   - chapter aggregation: `references/chapter-files.md`;
-   - explicitly requested exercise work: `references/exercise-files.md`.
-3. Inspect the LaTeX source, converter code, curated data, and active generated
-   output needed for the task.
-4. Change the converter or versioned data, regenerate, and validate. Do not
-   repair generated documents by hand unless the user explicitly requests it.
+Read `AGENTS.md`, `docs/implementation-handoff.md`, and
+`docs/conversion-contract.md`. Then read only the references needed:
 
-The active output directory comes only from `data/project-layout.json`.
-Stable names come from `data/rosetta-files.json`. Never consult
-`archive/legacy-rosetta/`; it is the historical former `src/` backup.
+- section work: `references/section-files.md` and `references/latex-to-markdown.md`
+- chapter aggregation: `references/chapter-files.md`
+- requested or required exercise work: `references/exercise-files.md`
 
-## Priorities
+Inspect the LaTeX, converter, curated data, and active generated output in
+scope. Obtain the output path from `data/project-layout.json`; never use
+`archive/legacy-rosetta/`.
 
-Prioritize section files: first faithful natural-language mathematics, then
-applicable Agda for their definitions, results, constructions, and proofs.
-After sections, maintain aggregate chapters and converter correctness.
+## Work
 
-Exercise prose and structure remain conversion outputs, but finding Agda for
-exercise solutions is lower priority. Do not proactively fill missing exercise
-Agda blocks unless the user requests it or a section depends on that code.
+Prioritize remaining section Agda across Chapters 3--22. Defer exercise Agda
+unless a section depends on it.
 
-## Structure and naming
+For each section item, search pinned `external/agda-unimath` for exact code and
+then close analogues. Copy the closest applicable source; never invent code.
+Preserve upstream names and structure when possible, make only necessary local
+adaptations, and use repository-local imports.
 
-A globally numbered LaTeX `\section` becomes a Rosetta chapter. A LaTeX
-`\subsection` becomes a Rosetta section. An `\exitem` becomes an exercise.
+Record commit, file, inclusive lines, SHA-256 digest, stored code, destination,
+item, and honest `exact` or `adapted` provenance in `data/agda-blocks*.json`.
+If no source applies, record a gap and continue.
 
-- `chapter-N-title-slug.lagda.md`
-- `section-N-M-title-slug.lagda.md`
-- `exercise-N-K-topic-slug.lagda.md`
+Make durable prose or notation repairs in converter code or versioned data,
+regenerate every affected file, and add regression tests for recurring rules.
 
-Each file begins with a level-one heading and an Agda module whose name exactly
-matches the basename. Put Agda blocks near the mathematical item they formalize.
-Use stable `rosetta-item` and `rosetta-agda-block` markers through the converter,
-not manual output edits.
+## Comments and validation
 
-## Agda sourcing
+Add a short `codex` review comment only for a useful mathematical, source, or
+dependency question. Do not record routine searches or passing checks.
 
-Before adding a block, search the pinned repository submodule at
-`external/agda-unimath` for exact and analogous code.
-
-- Never write a new block by hand or recreate upstream-looking code.
-- Copy the closest applicable source. Preserve its names, structure, line
-  breaks, and indentation where possible.
-- Make only changes required by established local names, universes, imports, or
-  dependencies. Mark any changed block as adapted, never exact.
-- Record the upstream commit, file, inclusive line range, SHA-256 hash, stored
-  code, and a concise adaptation note in `data/agda-blocks*.json`.
-- Generated documents may import only repository-local modules, never
-  `external/agda-unimath` modules.
-- If no applicable source exists, record a missing-code gap and continue with
-  other in-scope section work. Do not invent a replacement.
-
-Typecheck every changed section containing Agda with:
+Typecheck every changed section containing Agda:
 
 ```text
 python3 rosetta.py typecheck-candidate N M
 ```
 
-When shared dependencies change, also typecheck the aggregate chapter.
-
-## Review comments
-
-While supplying candidate blocks, add a `codex` comment only when it helps a
-reviewer answer a likely mathematical, logical, or source question. For a
-useful search gap, name the closest relevant upstream definitions and briefly
-say why they are insufficient. Clearly distinguish exact, adapted, and merely
-related sources.
-
-Keep comments short and plain. Do not add routine search histories, speculative
-lists, code summaries, or comments that only report successful typechecking.
-Missing-code items use the same review interface with empty candidate code.
-
-## Validation
-
-Confirm source coverage, numbering, file/module agreement, local imports, and
-Agda placement. Before handoff run:
+Before handoff run:
 
 ```text
 python3 -m unittest discover
@@ -95,5 +54,6 @@ python3 rosetta.py check
 git diff --check
 ```
 
-Preserve unrelated and uncommitted work. Do not pull, commit, push, reset, or
-clean unless the user explicitly requests it.
+Preserve unrelated work. Focused commits are allowed: inspect the worktree,
+stage only task changes, validate, and use a clear message. Do not reset, clean,
+overwrite, pull, push, or rewrite history unless the task requires it.

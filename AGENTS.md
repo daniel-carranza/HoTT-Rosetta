@@ -1,53 +1,37 @@
 # HoTT Rosetta agent instructions
 
-Before changing this repository, read these current instructions completely:
+Before changing the repository, read:
 
 1. `docs/implementation-handoff.md`
 2. `docs/conversion-contract.md`
 3. `skills/hott-rosetta-translation/SKILL.md`
-4. Every reference selected by that skill for the task
+4. The task references selected by that skill
 
-Read `docs/initial-prompt.txt` and `docs/audit-baseline.md` only when historical
-project intent or baseline evidence is relevant; they are not current workflow
-instructions.
+`docs/initial-prompt.txt` and `docs/audit-baseline.md` are historical evidence,
+not current instructions.
 
-## Non-negotiable requirements
+## Requirements
 
-- Required conversion compatibility is Chapters 3--22. Chapters 1--2 are
-  optional.
-- Prioritize faithful section prose and section Agda. Exercise prose remains in
-  scope, but finding missing exercise Agda is lower priority and should happen
-  only when requested or required by section work.
-- High-fidelity reproduction from Chapter 3 onward is a success criterion.
-- File existence never means complete conversion.
-- The review UI is entirely optional. Conversion and ordinary checks must not
-  depend on review state.
-- The active Rosetta directory is configured in `data/project-layout.json`.
-  Every script and program must use that setting rather than hard-coding a
-  location.
-- `archive/legacy-rosetta/` (formerly `src/`) is a historical backup only. Active scripts, programs, tests, and
-  agent workflows must not read from it, write to it, compare against it, or
-  put it on Agda's include path.
-- Agda claimed as copied from agda-unimath must be verbatim and have exact
-  commit/file/line/hash provenance. Do not describe adapted legacy blocks as
-  exact.
-- Never write a new Agda block by hand. Search agda-unimath for exact and
-  analogous material, copy the closest applicable code, and make only locally
-  necessary adaptations. If no applicable source exists, stop and report the
-  gap.
-- Generated Rosetta files must remain self-contained: use repository-local
-  imports, never imports from `external/agda-unimath`.
+- Complete section prose and section Agda for Chapters 3--22 before filling
+  remaining exercise Agda. Add exercise Agda earlier only when a section needs
+  it. Chapters 1--2 are optional.
+- File presence and review state never establish completeness. The optional
+  review UI must not control conversion or ordinary checks.
+- Obtain the active output path from `data/project-layout.json`; never hard-code
+  it.
+- Never use `archive/legacy-rosetta/` in active code, tests, comparisons,
+  imports, or Agda include paths.
+- Never invent Agda. Copy exact or analogous pinned agda-unimath code, make
+  only necessary local adaptations, and record commit/file/line/hash
+  provenance. If no applicable source exists, report the gap.
+- Generated modules must use repository-local imports, never imports from
+  `external/agda-unimath`.
+- Preserve unrelated and in-progress work. Agents may create focused commits
+  using standard Git practices: inspect the worktree, stage only intended
+  changes, and use clear commit messages. Do not reset, clean, overwrite, or
+  include unrelated changes in a commit.
 
-## Working-tree warning
-
-The current converter implementation is uncommitted. Preserve all untracked
-files under `converter/`, `rosetta-book/`, `tests/`, `data/`, and `docs/`, plus `rosetta.py`
-and `AGENTS.md`. Preserve the `.gitignore` modification.
-Do not reset, clean, or replace this work.
-
-## Required validation
-
-Run before handing work back:
+## Validation
 
 ```text
 python3 -m unittest discover
@@ -55,5 +39,5 @@ python3 rosetta.py check
 git diff --check
 ```
 
-Use `python3 rosetta.py typecheck-candidate N M` whenever a changed section
-contains Agda. Typecheck exercises only when their Agda changes.
+Also run `python3 rosetta.py typecheck-candidate N M` for every changed section
+containing Agda. Typecheck exercises only when their Agda changes.
