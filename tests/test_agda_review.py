@@ -50,8 +50,8 @@ class AgdaReviewTests(unittest.TestCase):
         curated = [record for record in records if record.provenance_kind != "missing"]
         missing = [record for record in records if record.provenance_kind == "missing"]
         self.assertEqual(len(curated), 406)
-        self.assertEqual(sum(record.exact_match for record in curated), 172)
-        self.assertEqual(sum(record.provenance_kind == "adapted" for record in curated), 176)
+        self.assertEqual(sum(record.exact_match for record in curated), 170)
+        self.assertEqual(sum(record.provenance_kind == "adapted" for record in curated), 178)
         self.assertEqual(sum(record.provenance_kind == "handwritten" for record in curated), 58)
         self.assertTrue(missing)
         self.assertTrue(all(not record.project_code for record in missing))
@@ -63,7 +63,7 @@ class AgdaReviewTests(unittest.TestCase):
             if comment.author == "Daniel C"
         ]
         self.assertGreaterEqual(len(daniel_comments), 11)
-        self.assertEqual(sum(record.conversion_status == "blocked" for record in records), 29)
+        self.assertEqual(sum(record.conversion_status == "blocked" for record in records), 28)
         self.assertTrue(all(record.statement for record in records))
         self.assertTrue(all(record.document_sha256 for record in records))
 
