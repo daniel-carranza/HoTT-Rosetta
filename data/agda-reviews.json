@@ -90,13 +90,188 @@
     },
     "definition-8.4.1-common-divisor": {
       "comments": [],
-      "review_sha256": "94d728f8508982ff49b2c7ac115d4217d319bcf4f24a2ed2af8e5c73c87fb0e9",
+      "review_sha256": "bb0cbb5e8246cbd30123854aa8f21503a957d988fcd82b18c07498d68ee181a4",
       "state": "approved"
     },
     "definition-8.4.1-greatest-common-divisor": {
       "comments": [],
-      "review_sha256": "439c3ed9284d83a41fc417a4ce055d6a2f015d6c742ebe23658166dc77665aed",
+      "review_sha256": "0a20dd9afde8cdc05e6a049bda2c7151d9fe2da4e6143474a8ecebb13984b195",
       "state": "approved"
+    },
+    "definition-8.4.3-multiple-gcd": {
+      "comments": [],
+      "review_sha256": "a2dc219e025de53bce2d84f87996455e521b1aeeb4ff60b4c0feeefea63dddca",
+      "state": "approved"
+    },
+    "definition-8.4.6-gcd": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Why are `is-multiple-of-gcd-gcd-ℕ` and `is-lower-bound-gcd-ℕ` part of this codeblock?"
+        }
+      ],
+      "review_sha256": "3c2ed38872cdc6fbee59587ca2ab7123a8ef4660aa356b16bad79c4eaa0392d3",
+      "state": "pending"
+    },
+    "definition-8.5.1-prime": {
+      "comments": [],
+      "review_sha256": "e8fd5b16f71f0d0c6a9d4101265c3132e7b36147488d1e59be666f474c7c9778",
+      "state": "approved"
+    },
+    "definition-8.5.1-proper-divisor": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This includes more than what the definition asks for..."
+        }
+      ],
+      "review_sha256": "da1ec949186eecf1f6e8e83892ae607e80022fcf9543f910393d00e4341df5ba",
+      "state": "rejected"
+    },
+    "definition-8.6.1-booleanization": {
+      "comments": [],
+      "review_sha256": "d21f1403a1cc16cb4815a198c4f04b6d3040fcb7fb6e21636895802d8eaf949c",
+      "state": "approved"
+    },
+    "definition-9.1.2-homotopies": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "It seems this definition unfolds the definition of `eq-value` - I'm recording this now in case this convention comes up later."
+        }
+      ],
+      "review_sha256": "2b715d21c9f0d23f1c29649bb9e0d77003fa18b941b0c723a96d8c3da51d89c4",
+      "state": "pending"
+    },
+    "definition-9.1.5-concatenation-homotopy": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Not sure if we need concat-htpy' at this point."
+        }
+      ],
+      "review_sha256": "5f23ae684314dae64d78e6dd9819c68abe2f8b83892e31546b6007f3c71d02ef",
+      "state": "pending"
+    },
+    "definition-9.1.5-concatenation-homotopy-code": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Duplicate"
+        }
+      ],
+      "review_sha256": "52519c91c2273092233a07f11a9f61d5295bd2e5365946a7f3449d1ad64d098c",
+      "state": "rejected"
+    },
+    "definition-9.1.5-inverse-homotopy": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "I'm not sure what the deal is with the banner at the top saying \"Not inserted by conversion: Source range included a Markdown fence; superseded by the corrected pinned range.\" - this seems to show up just fine in the whole file preview."
+        }
+      ],
+      "review_sha256": "eb4cbb21dd7b091b99eb8e6650f012465b4b02031e42b60a656ba994b0abf015",
+      "state": "approved"
+    },
+    "definition-9.1.5-inverse-homotopy-code": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Seems to be a duplicate entrry"
+        }
+      ],
+      "review_sha256": "23b0763aa343db22cb0ecd35c62a63471c9885938854a7985b8b9ad3f99fb409",
+      "state": "rejected"
+    },
+    "definition-9.1.5-reflexive-homotopy": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "I don't see the need for refl-htpy' at this point."
+        }
+      ],
+      "review_sha256": "67b30b870bc49e07ce2f5d7ec5973225fda1c5287ba099995f81dc76253060f7",
+      "state": "pending"
+    },
+    "definition-9.1.7-whiskering": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Why is right-htpy not part of the agda code here?"
+        }
+      ],
+      "review_sha256": "670f87e098e9734e3ac2d88baa9b231b9e12086d2ee89bb24fa3e8f3fa2f30e7",
+      "state": "pending"
+    },
+    "definition-9.2.1-equivalence-components": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Why is this here? Seems out of place again."
+        }
+      ],
+      "review_sha256": "22425220a38144999abadae884091bdcae2a318f014a8a38a9990b561fc9fe4f",
+      "state": "pending"
+    },
+    "definition-9.2.1-equivalence-map-components": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Again, seems out of place."
+        }
+      ],
+      "review_sha256": "ac4980b67efbe5f0a12ed9f42740850c6f8d89dc2593f0172450adac727f7e06",
+      "state": "pending"
+    },
+    "definition-9.2.1-equivalences": {
+      "comments": [],
+      "review_sha256": "812cf65f81ac28a8daa49bd4d3b852e61cf5d4f6d9ba57055a5221e23447a48f",
+      "state": "approved"
+    },
+    "definition-9.2.1-is-equivalence": {
+      "comments": [],
+      "review_sha256": "5757d100c464f771c46ecf590780e338623bc964ec5422ecfa83e91119399828",
+      "state": "approved"
+    },
+    "definition-9.2.1-retractions": {
+      "comments": [],
+      "review_sha256": "95138646893e930b2f620b2a41dbace89b2b5a8259a179b163630e0af0d55391",
+      "state": "approved"
+    },
+    "definition-9.2.1-section-structure": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Something got messed up with the placement of this block."
+        }
+      ],
+      "review_sha256": "51f5c0e97b3da367f694e81e0b013ea119d7240ca8555179c1fdfc8127ce9f6b",
+      "state": "pending"
+    },
+    "definition-9.2.1-sections": {
+      "comments": [],
+      "review_sha256": "7586ca2c04f0d4e4be0577c3ce657e84fa046f0d5467d84e6d7e58ac4bd6e261",
+      "state": "approved"
+    },
+    "definition-9.3.1-equality-sigma": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Should we unwind the definiton of dependent identification?"
+        }
+      ],
+      "review_sha256": "4fc5fcbe5680543e882736aca6853bf89da9181726fdce6ca98936bcddf7c8eb",
+      "state": "pending"
+    },
+    "definition-9.3.3-pair-equality": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This proof seems to lose the spirit of the book definition with all the auxiliary defns in between?"
+        }
+      ],
+      "review_sha256": "d8d1810eaf9e771e9280e8f14cb0351f2f686baffd0e37c282644271dfe7c0cc",
+      "state": "pending"
     },
     "example-8.1.2-unit-empty-decidable": {
       "comments": [],
@@ -148,6 +323,21 @@
       "review_sha256": "4e2a6ab0b51e398b38465db2962b768058ed8d44b23a0466ce74b7f0b2ef3043",
       "state": "approved"
     },
+    "example-9.2.3-identity-equivalence": {
+      "comments": [],
+      "review_sha256": "8db38db30e9c1c7b2f9ba67b070c4cba9fdbb6a87918a8c49516285de5277767",
+      "state": "approved"
+    },
+    "example-9.2.4-boolean-negation-equivalence": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Depends on the `is-involution` definitions which seem out-of-place here."
+        }
+      ],
+      "review_sha256": "9822e1e98a7b7706f1bd7906b38a1922e80262cb0552b3a9e99da16043986f7b",
+      "state": "pending"
+    },
     "exercise-7-1-divisibility-three-for-two-block-1": {
       "comments": [
         {
@@ -181,6 +371,36 @@
       ],
       "review_sha256": "04634297cad31d25c722345f766e788ab317e320a83d58b983209d67b26865ac",
       "state": "pending"
+    },
+    "lemma-8.4.5-sum-multiple-gcd": {
+      "comments": [],
+      "review_sha256": "d14fc40e8b2da5e7b3482c493704b7227a1a5f37a836d13fca52fc5b79035d87",
+      "state": "approved"
+    },
+    "lemma-8.4.7-double-negation-elimination": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "How exactly is Exercise 4.3 intended to be used, and does this codeblock accurately reflect this intention?"
+        }
+      ],
+      "review_sha256": "5ac0f85fe982e06b6c93c80c232cbdb66adcd5b64c7ab6995993c72bacc383c6",
+      "state": "pending"
+    },
+    "lemma-8.4.7-zero-gcd": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "See previous comments about using \"is-zero\""
+        }
+      ],
+      "review_sha256": "8cb0d6cdb302fc87f251bcf5b998f48dfcfe26d9a8f263b91a9ed615823db996",
+      "state": "pending"
+    },
+    "lemma-9.3.2-reflexivity": {
+      "comments": [],
+      "review_sha256": "3c9c3077b4721cc1127dee5abd9f55ca0919c159bf510dd6071639294697b45a",
+      "state": "approved"
     },
     "missing-agda-exercise-7-9-euclidean-division-exercise-7-9-b": {
       "comments": [
@@ -405,13 +625,88 @@
     },
     "proposition-8.4.2-common-divisor-gcd": {
       "comments": [],
-      "review_sha256": "d90cb62f210844429f0edf99d5015800377c9f243a02e83465a78a0db9375c3e",
+      "review_sha256": "3e64d0a3f2738575ada19ce0ecdb04a87b90e9d2d9a25e1eb4c89aa051c70464",
       "state": "approved"
     },
     "proposition-8.4.2-uniqueness-gcd": {
       "comments": [],
-      "review_sha256": "5de7969dfc359c993c27b247fb24d666e23771c8f7b856544eee395fac6c99c7",
+      "review_sha256": "b6bd4d16b2e9d535aa12cee1921858aec26470d7499dcc8fb9451ca17982608a",
       "state": "approved"
+    },
+    "proposition-8.4.4-common-divisor-bound": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "See comment in Section 7 about using \"is-zero\". This has a somewhat analogous question - do we want to start using \"is-nonzero\"?"
+        }
+      ],
+      "review_sha256": "fd45feddf8ff9619e35a555c8bdf4d0725fcae18934dc84f570d0eadbc8de78b",
+      "state": "pending"
+    },
+    "proposition-8.4.4-common-divisor-decidable": {
+      "comments": [],
+      "review_sha256": "dc8b993cc9fe73bd7330d8794c8bb50fadd3bfd514a3861f84317c7c8b189354",
+      "state": "approved"
+    },
+    "proposition-8.4.4-divisor-successor-bound": {
+      "comments": [],
+      "review_sha256": "5f146ae327d0fd437d08ade074e3f482eb623afa2bdc7b433f70ec40bbcf253e",
+      "state": "approved"
+    },
+    "proposition-8.4.4-multiple-gcd-decidable": {
+      "comments": [],
+      "review_sha256": "174705701a398adbd4c148c18c7fb2c0fca836efa51b185cc95d33784c1d9d9a",
+      "state": "approved"
+    },
+    "proposition-9.1.6-associativity": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Duplicate."
+        }
+      ],
+      "review_sha256": "cb5b49129aba1848504ae99d9ae9af441f275f1bac4bd051f7e346b09296181e",
+      "state": "rejected"
+    },
+    "proposition-9.1.6-groupoid-laws": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "I'm ready to accept, but do we want the inv-htpy versions of assoc, left/right-unit, and left/right-inv at this point?"
+        }
+      ],
+      "review_sha256": "cc43137271e6f16c36bf84d08bae3758e88a429cebdb640f948b58b4927df7c0",
+      "state": "pending"
+    },
+    "proposition-9.1.6-inverse-laws": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Duplicate."
+        }
+      ],
+      "review_sha256": "ec0578088c5c5bed150ec29e1b8e32e48b17f9077413a04d7b91b10ad7a047be",
+      "state": "pending"
+    },
+    "proposition-9.1.6-unit-laws": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Duplicate."
+        }
+      ],
+      "review_sha256": "e45aab7655bb462bae6c74ea936be68e925b5ce9cd7eba66e6152e075417d417",
+      "state": "pending"
+    },
+    "proposition-9.2.7-equivalence-is-invertible": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Out of place."
+        }
+      ],
+      "review_sha256": "74297143928bd809c1d4c5210eb62cc229281d15638a5bde71f7c15093334d41",
+      "state": "pending"
     },
     "remark-7.5.3-natural-value-congruences": {
       "comments": [
@@ -421,6 +716,46 @@
         }
       ],
       "review_sha256": "11dd365e7bb7d01a4056b5c91d6b4035eecdd1fece3e1828e690fe2fce1081db",
+      "state": "rejected"
+    },
+    "remark-9.1.1-negation-involution": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Do we approve of this unfolding of the definition of `is-involution`?"
+        }
+      ],
+      "review_sha256": "d1bd82c4a2ff457d682f22a8fab82ba63647b8837e9d3a2b8f20f875c927c94d",
+      "state": "pending"
+    },
+    "remark-9.2.6-invertible-maps": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Again seems out of place here"
+        }
+      ],
+      "review_sha256": "eafb7c22d9fcd1da8d9de9b56cc5e77ac61cf3f91bdff59bc8c131004bcba771",
+      "state": "pending"
+    },
+    "remark-9.2.6-involutions": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Out of place."
+        }
+      ],
+      "review_sha256": "3287038cdc1556b871f8fcacbd1932e5c2b335120cd100fc00ea866e838a3e00",
+      "state": "rejected"
+    },
+    "remark-9.2.6-involutions-are-equivalences": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Out of place."
+        }
+      ],
+      "review_sha256": "b921b54137a998ca4003cc2c02f70b96e67bd4423a6e7552641de74612934d68",
       "state": "rejected"
     },
     "section-5-4-transport-block-82": {
@@ -508,6 +843,16 @@
       ],
       "state": "pending"
     },
+    "section-9.3-transport-action": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Why is this here? Seems to no be used in the next block, which is what corresponds to this definition."
+        }
+      ],
+      "review_sha256": "83571db2c54510452df14f8ebfe9a66024a8787846c6b8333896c07e8e5d2878",
+      "state": "pending"
+    },
     "theorem-7.4.7-effectiveness-mod-successor-adapted": {
       "comments": [
         {
@@ -577,6 +922,71 @@
       "comments": [],
       "review_sha256": "0c773b44d3333d140c5dfb73d24abf06dba97c816b416f4fdebd5dcafb0602a6",
       "state": "approved"
+    },
+    "theorem-8.4.8-divisor-gcd-common-divisor": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "I'm ready to approve, just wondering if there's a way to make this proof more efficient? e.g. I feel like div-right-factor could be some commutativitiy result of div-left-factor, but I could be wrong."
+        }
+      ],
+      "review_sha256": "8fc14de5caab7118fd7b909370491c3b6ba089d272caac620dac799cbdc4d92a",
+      "state": "pending"
+    },
+    "theorem-8.4.8-divisor-multiple": {
+      "comments": [],
+      "review_sha256": "9dd7b4bc16ebdcfaa9a6f0f73b410ebf9c7286409880f8bfc5b0fab6ef55a549",
+      "state": "approved"
+    },
+    "theorem-8.4.8-gcd-is-gcd": {
+      "comments": [],
+      "review_sha256": "33636847a2028487ff1618e451221acc0690f06b0ff8b0ff86eb390d06668cf7",
+      "state": "approved"
+    },
+    "theorem-8.4.8-nonzero-and-common-divisor": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "See previous comments about using is-nonzero."
+        }
+      ],
+      "review_sha256": "90ff3e900143895f8e3e7bfc8ff4dfca213ba1b62e8d64f8d40bc366237422d0",
+      "state": "pending"
+    },
+    "theorem-8.4.8-small-common-multiple-zero": {
+      "comments": [],
+      "review_sha256": "1cecedb41ca2131c6bc38e6985da2f0e984dd5b4acad451759d897bb8f1b36f5",
+      "state": "approved"
+    },
+    "theorem-8.6.2-boolean-reflection": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Do we want the inverse defined here, and do we want it placed above the definition of the forward map?"
+        }
+      ],
+      "review_sha256": "35fe4ce091d2850378b489db214d1f9ecda2d73f64de2f3e827e22e649dfa908",
+      "state": "pending"
+    },
+    "theorem-9.3.4-equivalence-proof": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Where is `ap-pr1-eq-pair-eq-fiber` used? It doesn't seem to be necessary."
+        }
+      ],
+      "review_sha256": "78615f8268f4acae0f18705c5c418fe58829cdd6214ca1cec5164bea77b5498e",
+      "state": "rejected"
+    },
+    "theorem-9.3.4-inverse-map": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "It seems some of these constructions, e.g, `eq-pair-eq-base`, aren't used in the later blocks that prove this theorem. Maybe they should be removed?"
+        }
+      ],
+      "review_sha256": "54758cb850e11da29c0c804ef98aac41d89b1be3c09256ad6bc742ddd665eb52",
+      "state": "pending"
     }
   },
   "version": 1
