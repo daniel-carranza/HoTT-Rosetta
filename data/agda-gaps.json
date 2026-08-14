@@ -1,0 +1,89 @@
+{
+  "format_version": 1,
+  "items": [
+    {
+      "item_id": "exercise-7-9-b",
+      "kind": "Exercise",
+      "number": "7.9(b)",
+      "destination": "exercise-7-9-euclidean-division.lagda.md",
+      "statement": "Show that bounded quotient-and-remainder decompositions of a natural number are unique: if a = qb + r and a = q'b + r', with both remainders less than nonzero b, then q = q' and r = r'."
+    },
+    {
+      "item_id": "exercise-8-5",
+      "kind": "Exercise",
+      "number": "8.5",
+      "destination": "exercise-8-5-characterization-prime.lagda.md",
+      "statement": "Prove the alternative characterization of prime natural numbers stated in Exercise 8.5."
+    },
+    {
+      "item_id": "exercise-8-9-b",
+      "kind": "Exercise",
+      "number": "8.9(b)",
+      "destination": "exercise-8-9-finite-dependent-products.lagda.md",
+      "statement": "Prove the decidable-equality part of Exercise 8.9 for dependent functions out of a finite type."
+    },
+    {
+      "item_id": "exercise-8-10",
+      "kind": "Exercise",
+      "number": "8.10",
+      "destination": "exercise-8-10-maximal-elements.lagda.md",
+      "statement": "Define the greatest common divisor as the maximal element of the type of common divisors."
+    },
+    {
+      "item_id": "exercise-8-13",
+      "kind": "Exercise",
+      "number": "8.13",
+      "destination": "exercise-8-13-primes-congruent-three-mod-four.lagda.md",
+      "statement": "Show that there are infinitely many primes congruent to 3 modulo 4."
+    },
+    {
+      "item_id": "exercise-8-14",
+      "kind": "Exercise",
+      "number": "8.14",
+      "destination": "exercise-8-14-fields-integers-modulo-prime.lagda.md",
+      "statement": "Show that the integers modulo a prime form a field."
+    },
+    {
+      "item_id": "exercise-8-15-b",
+      "kind": "Exercise",
+      "number": "8.15(b)",
+      "destination": "exercise-8-15-cofibonacci-sequence.lagda.md",
+      "statement": "Prove the backward direction of the adjointness equivalence for the cofibonacci sequence."
+    },
+    {
+      "item_id": "exercise-8-8",
+      "kind": "Exercise",
+      "number": "8.8",
+      "destination": "exercise-8-8-decidable-equality-sigma-types.lagda.md",
+      "statement": "Establish the stated implications among decidable equality of a base, its fibers, and their dependent sum."
+    },
+    {
+      "item_id": "exercise-8-9-a",
+      "kind": "Exercise",
+      "number": "8.9(a)",
+      "destination": "exercise-8-9-finite-dependent-products.lagda.md",
+      "statement": "Show that a dependent product of decidable types indexed by Fin(k) is decidable."
+    },
+    {
+      "item_id": "exercise-8-11",
+      "kind": "Exercise",
+      "number": "8.11",
+      "destination": "exercise-8-11-bezouts-identity.lagda.md",
+      "statement": "Prove decidability of distances between multiples and construct Bézout coefficients for natural numbers."
+    },
+    {
+      "item_id": "exercise-8-12",
+      "kind": "Exercise",
+      "number": "8.12",
+      "destination": "exercise-8-12-prime-factorization.lagda.md",
+      "statement": "Construct and prove uniqueness of prime factorizations of natural numbers."
+    },
+    {
+      "item_id": "exercise-8-15-a",
+      "kind": "Exercise",
+      "number": "8.15(a)",
+      "destination": "exercise-8-15-cofibonacci-sequence.lagda.md",
+      "statement": "Construct the cofibonacci sequence and prove the forward divisibility implication."
+    }
+  ]
+}

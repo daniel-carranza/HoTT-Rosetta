@@ -4,6 +4,7 @@
 
 # Agda interface files
 *.agdai
+_build/
 
 # =========================
 # Emacs generated files
@@ -88,3 +89,8 @@ cabal.sandbox.config
 # Python virtualenvs, if scripts are used
 .venv/
 venv/
+__pycache__/
+*.py[cod]
+
+# Recoverable local backups made by the review/conversion tools
+.rosetta-backups/

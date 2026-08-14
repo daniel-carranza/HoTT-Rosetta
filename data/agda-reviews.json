@@ -1,0 +1,583 @@
+{
+  "blocks": {
+    "corollary-8.2.5-bounded-dependent-products": {
+      "comments": [],
+      "review_sha256": "eecf94bdda2cdc9a1b4a7b1a24956b9fbf78bd4b2a1237ba7b1fc0141215478c",
+      "state": "approved"
+    },
+    "corollary-8.2.5-upper-bound": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "It is unfortunate that the roles of m and n in the book become swapped in the agda code. Should we overwrite this?"
+        }
+      ],
+      "review_sha256": "1b376e225547345a2a6c95cea57da1b6f7777fa39ebc60cbc13fce80ae231f40",
+      "state": "pending"
+    },
+    "definition-7.4.1-split-surjective-adapted": {
+      "comments": [],
+      "review_sha256": "4b6f1d6f85829fbd3eea5d14c6fd803bada5f45ce188698999a102345eca8452",
+      "state": "approved"
+    },
+    "definition-7.4.2-finite-zero-and-successor-adapted": {
+      "comments": [],
+      "review_sha256": "130dc915d96308746d4a0550c3124b409f9d87612c15f9ff66a85ba330d8212d",
+      "state": "approved"
+    },
+    "definition-7.4.3-mod-succ-natural-numbers": {
+      "comments": [
+        {
+          "author": "Reviewer",
+          "text": "Do we need the definitions of `mod-two` and `mod-three` here (e.g. for a later section) or can they be removed?"
+        }
+      ],
+      "review_sha256": "0e069a14b4a0cccd047f5c3ff35a9693d14110c63e1a66cdac354da4ba479570",
+      "state": "pending"
+    },
+    "definition-7.5.1-integers-modulo-adapted": {
+      "comments": [],
+      "review_sha256": "46a7135ea64a7a633a5fb2be99a4e197f06948d1a2ec86f8dbc2169dd65f167f",
+      "state": "approved"
+    },
+    "definition-7.5.2-addition-and-negation-finite": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Where is the analogue of the additive inverse?"
+        },
+        {
+          "author": "Daniel C",
+          "text": "Nvm, it's the next block..."
+        },
+        {
+          "author": "Daniel C",
+          "text": "Do we need add-Fin'?"
+        }
+      ],
+      "review_sha256": "68af78e2d595e9669ed7e73abcadec5ec3b44a00b9f635a3420072a6ae500eac",
+      "state": "pending"
+    },
+    "definition-7.5.2-negation-finite": {
+      "comments": [],
+      "review_sha256": "d2bf94b59b0fc826911ec287827545444f7241ef5473144f2aee08b801f9642e",
+      "state": "approved"
+    },
+    "definition-8.1.1-decidable": {
+      "comments": [],
+      "review_sha256": "157a409c1087a16460ee27de2862fb79c3d4f588576b4c072888e1c82f39bb0b",
+      "state": "approved"
+    },
+    "definition-8.1.5-decidable-equality": {
+      "comments": [],
+      "review_sha256": "ef4dc696efcae0f347bf233d9ab74b6f13e6cc421bfdb51cdded4a76d706ecc1",
+      "state": "approved"
+    },
+    "definition-8.2.1-collatz": {
+      "comments": [],
+      "review_sha256": "59555e95217d84067e12f160bfab464f50681e19d47c1a8952013cb83d3b70f9",
+      "state": "approved"
+    },
+    "definition-8.3.1-lower-bound": {
+      "comments": [],
+      "review_sha256": "76606face8dc07a9d526e38212e9819d72a41099f532dbfd5e97871ebd2fc7b1",
+      "state": "approved"
+    },
+    "definition-8.3.1-minimal-element": {
+      "comments": [],
+      "review_sha256": "43a4e50089cba973d260e3e21b159c4a8545848eefe8e3ee79e238319bfa1e0d",
+      "state": "approved"
+    },
+    "definition-8.4.1-common-divisor": {
+      "comments": [],
+      "review_sha256": "94d728f8508982ff49b2c7ac115d4217d319bcf4f24a2ed2af8e5c73c87fb0e9",
+      "state": "approved"
+    },
+    "definition-8.4.1-greatest-common-divisor": {
+      "comments": [],
+      "review_sha256": "439c3ed9284d83a41fc417a4ce055d6a2f015d6c742ebe23658166dc77665aed",
+      "state": "approved"
+    },
+    "example-8.1.2-unit-empty-decidable": {
+      "comments": [],
+      "review_sha256": "be7be24bef8d07485e1fd340cfe635022aea7d3571eb41dfd3d84c593e4b6a85",
+      "state": "approved"
+    },
+    "example-8.1.3-coproduct-decidable": {
+      "comments": [],
+      "review_sha256": "01a7c407ffd4697d7fea5476a051f44fc758a409fb462cd363afd7d2f91da61e",
+      "state": "approved"
+    },
+    "example-8.1.3-evaluation": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Why is this its own block?"
+        }
+      ],
+      "review_sha256": "2e0d62c881b4b4a4211244fec8fa43557649d00367ecc964b290b81b73c716b0",
+      "state": "pending"
+    },
+    "example-8.1.3-function-decidable": {
+      "comments": [],
+      "review_sha256": "1abb9c365ca65e9e19c3c1cff2b0162aab80ed471add0f27be8c741af497f879",
+      "state": "approved"
+    },
+    "example-8.1.3-negation-decidable": {
+      "comments": [],
+      "review_sha256": "4233ad372556242f26bae03f02aac2a613490f7dbd34e7dd692196b4338463ce",
+      "state": "approved"
+    },
+    "example-8.1.3-product-decidable": {
+      "comments": [],
+      "review_sha256": "be81e4ef44aaa53d90a0b4b32ee7a4d7ad6ada25ffbd3a864fe43f3458fbf773",
+      "state": "approved"
+    },
+    "example-8.1.4-equality-natural-decidable": {
+      "comments": [],
+      "review_sha256": "c3cfdb61ea61f777c37c8a4bc09590d99f0d12cc71c12ee88ec345f54426a3d9",
+      "state": "approved"
+    },
+    "example-8.1.4-inequality-natural-decidable": {
+      "comments": [],
+      "review_sha256": "b9fb4a90fe442cb184368cc70d62e0c0ff641ff221c93edf344fbdff8d94878a",
+      "state": "approved"
+    },
+    "example-8.1.4-strict-inequality-natural-decidable": {
+      "comments": [],
+      "review_sha256": "4e2a6ab0b51e398b38465db2962b768058ed8d44b23a0466ce74b7f0b2ef3043",
+      "state": "approved"
+    },
+    "exercise-7-1-divisibility-three-for-two-block-1": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This solution was needed for a later section. Please complete this file with the appropriate code review and prose."
+        }
+      ],
+      "state": "pending"
+    },
+    "exercise-7-9-bound-successor-finite": {
+      "comments": [],
+      "review_sha256": "bcfbfc1d042d74e1d036af8e38095a866b1bc52f5f69eda968d4afa43eed129e",
+      "state": "pending"
+    },
+    "lemma-7.4.4-natural-values-finite-successor-adapted": {
+      "comments": [],
+      "review_sha256": "c45abf5522cc9dc8f0dc5bee2cb6169c7e19b71e16cbf28884a71c4bf9743994",
+      "state": "approved"
+    },
+    "lemma-8.1.6-decidability-logical-equivalence": {
+      "comments": [],
+      "review_sha256": "86c4b84644867e51e16c4e6fd365d98b6d01fc8dc35885098cbee25eddda5763",
+      "state": "approved"
+    },
+    "lemma-8.1.6-inverse-logical-equivalence": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Is this needed or can it be inlined?"
+        }
+      ],
+      "review_sha256": "04634297cad31d25c722345f766e788ab317e320a83d58b983209d67b26865ac",
+      "state": "pending"
+    },
+    "missing-agda-exercise-7-9-euclidean-division-exercise-7-9-b": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide marks Exercise 7.9(b) as TODO. The module elementary-number-theory.euclidean-division-natural-numbers provides euclidean-division-ℕ and its quotient, remainder, equation, and remainder bound, but no result proving uniqueness for arbitrary bounded quotient-and-remainder decompositions."
+        }
+      ],
+      "review_sha256": "679307f2c43b977c7182b16d813a72055529ad51383210ae786031cbf4b80c76",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-10-maximal-elements-exercise-8-10": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide marks Exercise 8.10 TODO. The greatest-common-divisor module defines is-gcd-ℕ and gcd-ℕ, but not the requested construction as a maximal common divisor."
+        }
+      ],
+      "review_sha256": "81f4eeadabf18aa637f5f37995303661ce0640bb322b0cd8a6878a23c1874598",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-11-bezouts-identity-exercise-8-11": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Closest match: elementary-number-theory/bezouts-lemma-natural-numbers. The relevant exact ranges are preserved as blocked candidates; they require the upstream integer modular-arithmetic and minimal-positive-distance chain."
+        }
+      ],
+      "review_sha256": "56bdc7a7d99bc17a9c83a18aedb23df03a2c14f73f7a8cf2e69c2de8b9bc794e",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-12-prime-factorization-exercise-8-12": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Closest match: elementary-number-theory/fundamental-theorem-of-arithmetic. Exact result ranges are preserved as blocked candidates; their list, strong-induction, and prime-factorization dependencies are not locally available here."
+        }
+      ],
+      "review_sha256": "ce51a78cd7e984b989c45192db0dbc357fc7afbd063734f181973fd36a496e6d",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-13-primes-congruent-three-mod-four-exercise-8-13": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide marks Exercise 8.13 TODO; infinitude-of-primes proves unbounded primes without the required congruence modulo 4."
+        }
+      ],
+      "review_sha256": "77ae75c2ec7cc004b2f8ca22bb913d85396cc39655d6816c659e340399a9156e",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-14-fields-integers-modulo-prime-exercise-8-14": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide marks Exercise 8.14 TODO. Existing modular-arithmetic code supplies finite cyclic rings, but no applicable proof that the prime case is a field."
+        }
+      ],
+      "review_sha256": "13df994f0ce14ebed398c39aa98fd4d52fd7d5560c7070cc5943ab809ec47252",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-15-cofibonacci-sequence-exercise-8-15-a": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Closest match: elementary-number-theory/cofibonacci. Exact/adapted construction ranges are preserved as blocked candidates; they depend on the upstream Pisano-period and Fibonacci-divisibility developments."
+        }
+      ],
+      "review_sha256": "9424a513b128448ad9af86ff85d463ce387b000dd5571dd3fb65e0ab390ef2f9",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-15-cofibonacci-sequence-exercise-8-15-b": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide supplies cofibonacci and forward-is-left-adjoint-cofibonacci, but explicitly leaves the backward direction TODO."
+        }
+      ],
+      "review_sha256": "484bb42d6457a35352d7b73dcc1b88f244ec86a8e7484b56d24ecd0c75368b52",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-5-characterization-prime-exercise-8-5": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide marks Exercise 8.5 TODO and records no applicable source for this alternative prime characterization."
+        }
+      ],
+      "review_sha256": "dcf191b6b10dbd0a71888ab1e43f18d1f12fa81e0e40b5ce19380fc8baa0d30f",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-8-decidable-equality-sigma-types-exercise-8-8": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Closest match: foundation/decidable-equality (dependent-sum equality). Its current proof depends on the equivalence framework introduced after Chapter 8; the exact source ranges are preserved as blocked candidates."
+        }
+      ],
+      "review_sha256": "459167c471b2014398821ca59a8233786fc175db963761c0d9c73f5af0f9abd5",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-9-finite-dependent-products-exercise-8-9-a": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Closest match: univalent-combinatorics/decidable-dependent-function-types, is-decidable-Π-Fin. It factors through dependent-function equivalences unavailable in the local Chapter 8 foundation; the adapted source candidate is preserved as blocked."
+        }
+      ],
+      "review_sha256": "6f4f9fe8599e8857dec19e0dd66a3b9190c7718d98d8374de2bc0ba249b5bdbd",
+      "state": "pending"
+    },
+    "missing-agda-exercise-8-9-finite-dependent-products-exercise-8-9-b": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "The agda-unimath literature guide supplies is-decidable-Π-Fin for part (a), but marks part (b) TODO; that result decides dependent propositions and does not provide decidable equality of dependent functions."
+        }
+      ],
+      "review_sha256": "919b6684a64da5f44f3d5fd0080ec3ce1c25da9436978b8ba1874caae5dcaa43",
+      "state": "pending"
+    },
+    "proposition-7.4.5-congruence-mod-successor-adapted": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "The curly braces from agda-unimath are missing, and the clause following `cong-nat-succ-Fin (succ-ℕ k) (inr star) =` seems to be an unfolding of the corresponding clause in agda-unimath. Need to double-check that the definitions truly coincide."
+        }
+      ],
+      "review_sha256": "fa33714d219915d3b57299833381fd7ac76661172543ded5e119a913e2efcce3",
+      "state": "pending"
+    },
+    "proposition-7.4.6-bounded-distance-congruence-adapted": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Does it matter that agda-unimath uses seprate agda blocks, whereas we use just one? Also, why is there an `H` at the end of our code, but not agda-unimath's?"
+        },
+        {
+          "author": "Daniel C",
+          "text": "Answering previous question on the stray `H`: it actually does exist in agda-unimath, it's just cut off in the preview here."
+        }
+      ],
+      "review_sha256": "3f19ab6c474ab2fee03e1eccc6e041718b5c281f693c30677e1a75c747a78788",
+      "state": "approved"
+    },
+    "proposition-7.4.6-small-divisor-and-bounded-congruence-adapted": {
+      "comments": [
+        {
+          "author": "codex",
+          "text": "Here le-ℕ means strict inequality, so the hypothesis is exactly x < d."
+        },
+        {
+          "author": "Daniel C",
+          "text": "Not sure why this is tagged as \"adapted\", the `abstract` line is present in agda-unimath."
+        }
+      ],
+      "review_sha256": "7a2ae4fb77646129df3704b48b76f5b6d90335e7a914a996ceeb82c54c870724",
+      "state": "approved"
+    },
+    "proposition-7.5.4-congruence-support-excerpts": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Lots of lemmas used in between - would appreciate a second look."
+        },
+        {
+          "author": "Daniel C",
+          "text": "The proof of the claim itself in a separate agda block is in the following agda block... why?"
+        }
+      ],
+      "review_sha256": "688c1fdca524f211a30b5ba692a435bdf443cfbd785dd2ed7ae9dc5517d0cc11",
+      "state": "pending"
+    },
+    "proposition-7.5.4-three-for-two-addition-congruence": {
+      "comments": [],
+      "review_sha256": "48605962cf6a46a1b095552ffa512b39ea16b73480477ab8dce56802653474ca",
+      "state": "approved"
+    },
+    "proposition-8.1.7-natural-decidable-equality": {
+      "comments": [],
+      "review_sha256": "e2b9c4b0fda4599f16f5a670ca6cfd523e4448f24c534cee5d7051fa4fd1ea79",
+      "state": "approved"
+    },
+    "proposition-8.1.8-finite-decidable-equality": {
+      "comments": [],
+      "review_sha256": "1b6be18b64d90230a1f4b3710ad3ae3a166446efa2bd0f6ea235dd808edb0552",
+      "state": "approved"
+    },
+    "proposition-8.2.3-decidable-function": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Why is there a prime symbol (the ' symbol) in front of the name?"
+        }
+      ],
+      "review_sha256": "6065175b78b6e71597e2e2e18e053cd98b58e483fb45393430bcf3d1cb221662",
+      "state": "pending"
+    },
+    "proposition-8.2.3-decidable-product": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "The book proof only does the case of `A -> B`, whereas this is the case of `A x B`. Should this be included?"
+        },
+        {
+          "author": "Daniel C",
+          "text": "Also, not sure why there are primes (the ' symbol) in front of the names?"
+        }
+      ],
+      "review_sha256": "767864f791e09b3bbf00e50629cfef80c1fba461495010f5b7cf8fe94bd5fd15",
+      "state": "pending"
+    },
+    "proposition-8.2.4-decidable-family": {
+      "comments": [],
+      "review_sha256": "4fa34649d15fa3db78a72b8cceff5d05a854b81aeccd7116391b89026d277b02",
+      "state": "approved"
+    },
+    "proposition-8.2.4-dependent-products-natural": {
+      "comments": [],
+      "review_sha256": "15a705ad61236fcc424522b099052d1d0477dc4474b5db6f5d01d582a462ed59",
+      "state": "approved"
+    },
+    "proposition-8.4.2-common-divisor-gcd": {
+      "comments": [],
+      "review_sha256": "d90cb62f210844429f0edf99d5015800377c9f243a02e83465a78a0db9375c3e",
+      "state": "approved"
+    },
+    "proposition-8.4.2-uniqueness-gcd": {
+      "comments": [],
+      "review_sha256": "5de7969dfc359c993c27b247fb24d666e23771c8f7b856544eee395fac6c99c7",
+      "state": "approved"
+    },
+    "remark-7.5.3-natural-value-congruences": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Missing the statement for preserving zero."
+        }
+      ],
+      "review_sha256": "11dd365e7bb7d01a4056b5c91d6b4035eecdd1fece3e1828e690fe2fce1081db",
+      "state": "rejected"
+    },
+    "section-5-4-transport-block-82": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This is copied from agda-unimath. Do we want to keep dependent-identification, or inline it into the definition of apd?"
+        }
+      ],
+      "state": "pending"
+    },
+    "section-5-5-the-uniqueness-of-refl-block-65": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This proof does not exist in agda-unimath and was supplied by hand."
+        },
+        {
+          "author": "Daniel C",
+          "text": "The closest reference source found proves that Σ(x : A), a = x is contractible, a notion that has not yet been defined here, so it is not quite a correct source for this proof."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-1-the-curry-howard-interpretation-block-186": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "agda-unimath uses a dedicated ap-add-ℕ function defined via ap-binary. This code instead follows the textbook proof, subject to the earlier reversed-multiplication caveat."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-1-the-curry-howard-interpretation-block-59": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This code is copied from agda-unimath, which defines multiplication in the opposite order from the textbook (k * m rather than m * k). This makes the later proof slightly different from both the textbook and the library proof."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-2-the-congruence-relations-on-natural-numbers-block-86": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "In agda-unimath, equivalence relations are defined only for relations valued in propositions."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-3-the-standard-finite-types-block-136": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This code was manually supplied. Is there a source for it in agda-unimath, and do we want it here at all?"
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-3-the-standard-finite-types-block-230": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "At this point, is-injective should have a proper earlier definition and be imported; it appears to be used multiple times before this."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-3-the-standard-finite-types-block-77": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "This differs slightly from agda-unimath, where finite types are first defined as sets and then cast to types."
+        }
+      ],
+      "state": "pending"
+    },
+    "section-7-3-the-standard-finite-types-block-87": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Not sure whether this inclusion should be included here; in particular, there is no analogous code for inclusion of the point."
+        }
+      ],
+      "state": "pending"
+    },
+    "theorem-7.4.7-effectiveness-mod-successor-adapted": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Changes to the code need explanation."
+        }
+      ],
+      "review_sha256": "fc6cc2ae53b24cf6d75237f364e8d3356b0e5e9db2b84a72d6dc4a7cdb2133f8",
+      "state": "pending"
+    },
+    "theorem-7.4.8-split-surjectivity-mod-successor": {
+      "comments": [],
+      "review_sha256": "f4dc267c371dc3dba53f179df8116ee1a379782930e38cee7efa9bf34929f0de",
+      "state": "approved"
+    },
+    "theorem-7.5.5-abelian-group-laws-finite-adapted": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Differences occur in the last few lines of `left-inverse-law-add-Fin` - needs further review."
+        }
+      ],
+      "review_sha256": "ec762c0dcfad4723aa17b066315e3bc55f767cdefdcae25d5c0020a132537b3e",
+      "state": "pending"
+    },
+    "theorem-8.1.9-divisibility-decidable": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "See previous comment on using `is-zero`."
+        }
+      ],
+      "review_sha256": "f0858b9f19835cc68535b6dba86a17ff430c2d60f094053b8b9f29444704fd94",
+      "state": "pending"
+    },
+    "theorem-8.1.9-divisibility-modulo": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "See previous comment on using `is-zero`."
+        }
+      ],
+      "review_sha256": "fb44b5150efe9f4ffda98ea34ebccef5ca3ec33790046fe395cd815330b33496",
+      "state": "pending"
+    },
+    "theorem-8.1.9-finite-zero-decidable": {
+      "comments": [
+        {
+          "author": "Daniel C",
+          "text": "Previously, we have been rewriting instances of \"is-zero\" into an actual identity type. This breaks that convention - we need to decide what the convention should be."
+        }
+      ],
+      "review_sha256": "ec8e59dedf01a2ad5adb24b264068a66fab8e0881af343488eeacbded52741c6",
+      "state": "pending"
+    },
+    "theorem-8.1.9-natural-zero-decidable": {
+      "comments": [],
+      "review_sha256": "bc16b858b678032344ed81c6577979172af2e09d96dba3003d1e08184aadd309",
+      "state": "approved"
+    },
+    "theorem-8.1.9-zero-divisor": {
+      "comments": [],
+      "review_sha256": "2dceeb0780848588486d02aac345f4283f26453b5fc6bb01394f59af398158f5",
+      "state": "approved"
+    },
+    "theorem-8.3.2-well-ordering": {
+      "comments": [],
+      "review_sha256": "0c773b44d3333d140c5dfb73d24abf06dba97c816b416f4fdebd5dcafb0602a6",
+      "state": "approved"
+    }
+  },
+  "version": 1
+}

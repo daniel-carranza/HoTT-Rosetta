@@ -1,27 +1,20 @@
-# LaTeX To Markdown
+# LaTeX to Markdown
 
-Use this reference for detailed conversion hints when translating `book/*.tex` into literate Agda Markdown files.
+Preserve content and expose unsupported input rather than silently dropping it.
+Implement recurring rules in the converter with regression tests.
 
-Keep the core file structure, naming, and validation rules in `../SKILL.md`.
-Record recurring LaTeX-to-Markdown mappings here, especially mappings for project-specific macros and symbols.
-If you encounter an unfamiliar LaTeX symbol or macro, ask the user for the intended Markdown translation before proceeding.
-After the user answers, record the translation in this file for future use.
+- Remove indexing commands and retain stable label information in item markers.
+- Render emphasis and definitions as Markdown emphasis/bold.
+- Render inline mathematics as code spans where readable and displays as
+  fenced `text` blocks.
+- Resolve cross-references from LaTeX labels; use a tested alias only for a
+  genuine editorial exception.
+- Convert word-like macros, including words joined by `\usc`, to readable
+  kebab-case text.
+- Preserve prose following code or display blocks as ordinary paragraphs.
+- Convert proof trees and TikZ-CD diagrams to faithful reviewable drafts with
+  stable markers.
+- Keep unknown macros and unsupported environments visible as diagnostics.
 
-## Inline Text
-
-- Cut any `\index{...}` text.
-- Remove LaTeX labels such as `\label{...}`.
-- For cross references such as `\cref{...}` or `\ref{...}`, ask the user for the intended Markdown wording before proceeding.
-- Convert `\emph{...}` to `*...*`.
-- Convert `\define{...}` and `\textbf{...}` to `**...**`.
-
-## Mathematics
-
-- Convert `\id{x}{y}` to `` `x = y` ``.
-- In general, math symbols and inline mathematical expressions should be written in code guards, as `` `...` ``.
-- For displayed mathematics, use fenced `text` blocks with the corresponding Unicode symbols, preceded and followed by one blank line.
-- Record LaTeX-to-Markdown and LaTeX-to-Unicode translations in this file for consistency in later translations.
-
-## Symbol Translations
-
-Record recurring translations here as they are confirmed.
+Use the explicit project notation tables and macro definitions in
+`book/hott.tex` as evidence. Do not execute arbitrary TeX definitions.
