@@ -2339,6 +2339,16 @@
       ],
       "review_sha256": "157d3fcf7b600296deafad2c999006a61893a92159944d03618e7e6839e0bc33",
       "state": "needs-further-review"
+    },
+    "unrecorded-exercise-2-3-exercise.lagda-1": {
+      "comments": [],
+      "review_sha256": "def7dc230e4efc6b8ec2528b7820b91d3d780b4d13072da02615c55e2ef880f1",
+      "state": "approved"
+    },
+    "unrecorded-exercise-2-4-exercise.lagda-1": {
+      "comments": [],
+      "review_sha256": "e21049c6f24b4427afc96783df4ef97e04792fd232fa70b2911cc4f6cbd85534",
+      "state": "approved"
     }
   },
   "version": 1
