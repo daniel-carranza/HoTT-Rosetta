@@ -1099,8 +1099,8 @@
     },
     "exercise-7-8-congruence-multiplication-natural": {
       "comments": [],
-      "review_sha256": "1984eafb357452f2129f976bd834028bd98c62d46e1b6961dce634bc1e6d9335",
-      "state": "approved"
+      "review_sha256": "3a0154429cfe344aa96966cc63f177864172a689cd2c16af0abf5292d38795bd",
+      "state": "needs-further-review"
     },
     "exercise-7-8-multiplication-finite": {
       "comments": [],
@@ -1812,6 +1812,11 @@
       "review_sha256": "74297143928bd809c1d4c5210eb62cc229281d15638a5bde71f7c15093334d41",
       "state": "needs-further-review"
     },
+    "remark-2.2.2-evaluation-at-a-point": {
+      "comments": [],
+      "review_sha256": "f245b43a5a389b9cdd93cfa8b52de0defc70937e0f163fc84dffd919e0f83fcf",
+      "state": "approved"
+    },
     "remark-3.1.2-induction-and-recursion-natural-numbers-local": {
       "comments": [],
       "review_sha256": "5d991956731258f8a8837a8c63b91429379086fae7d2b1924eab657a42edee2f",
@@ -1874,7 +1879,7 @@
     },
     "section-2-2-dependent-composition-adapted": {
       "comments": [],
-      "review_sha256": "43b3a4555abc845fe7d726e19d1a5e77174b244a5dec06e41fad95491e24fd7f",
+      "review_sha256": "f9bd24467f20525e0a4e70b87c2d092bcd25a46d7b5b05727e9c08cbf565514c",
       "state": "approved"
     },
     "section-2-2-identity-function-adapted": {
