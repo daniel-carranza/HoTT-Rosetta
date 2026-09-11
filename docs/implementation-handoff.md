@@ -118,11 +118,13 @@ those newer human choices.
 
 The exact proposal tip is published under annotated tag
 archive/proposal-agda-exercise-solutions-2026-09-11 and its peeled remote commit
-was verified. GitHub refused creation of the tag-protection ruleset with HTTP
-403: Administration: write is required. The user has been asked to grant access
-or create an active tag ruleset restricting updates/deletions with no bypass.
-Until that protection is verified, the proposal branch is deliberately retained.
-Do not retry permission workarounds or delete the branch before protection.
+was verified. After the user granted Administration: write, active tag ruleset
+22955406 was created and verified: updates and deletions are restricted, with no
+bypass actors. The remote proposal/agda-exercise-solutions branch was then deleted
+using an exact-tip deletion lease. A final remote check confirmed that the branch
+is absent and the protected tag still resolves to the archived tip above.
+No committed files or history were lost. Recover by creating a new branch from
+the archive tag; do not move the tag or resume the retired review workflow.
 
 ## Future mathematics
 
