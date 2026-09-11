@@ -16,7 +16,7 @@ from rosetta.review_sync import (
     git, merge_stores, merge_pending, resolve_pending, review_conflicts,
     require_review_branch, sync_status,
 )
-from rosetta.review_web import make_handler
+from rosetta.review_web import STYLE, make_handler, render_review_sharing
 from rosetta.review import discover_diagram_reviews, update_diagram_review, load_review_store, _stored_item
 
 
@@ -219,7 +219,7 @@ class ReviewSyncTests(unittest.TestCase):
             self.assertEqual(handler._send.call_args.args[0], 400)
             self.assertIn("Keep my text", handler._send.call_args.args[1])
 
-    def test_html_responses_show_branch_and_unpushed_reviews_without_network(self):
+    def test_clean_html_responses_show_only_muted_sharing_tip_without_network(self):
         with tempfile.TemporaryDirectory() as directory:
             root = self._repository(directory)
             with patch("rosetta.review_web.threading.Thread.start"):
@@ -229,11 +229,58 @@ class ReviewSyncTests(unittest.TestCase):
             handler.send_header = Mock()
             handler.end_headers = Mock()
             handler.wfile = io.BytesIO()
-            handler._send(200, "<html><main>Page</main></html>")
+            with patch("rosetta.review_sync.git", wraps=git) as commands:
+                handler._send(200, "<html><main>Page</main></html>")
+            self.assertFalse(any("fetch" in call.args for call in commands.call_args_list))
             page = handler.wfile.getvalue().decode()
-            self.assertIn("Branch: main", page)
-            self.assertIn("Unpushed review commits: 0", page)
-            self.assertIn("Saving a review is local", page)
+            self.assertNotIn("review-sharing-status", page)
+            self.assertNotIn("Branch:", page)
+            self.assertNotIn("Unpushed", page)
+            self.assertNotIn("/sync-refresh", page)
+            self.assertNotIn("Shared reviews belong to development main", page)
+            self.assertIn("class='review-sharing-tip'", page)
+            self.assertIn(".review-sharing-tip { color: #6b7075;", STYLE)
+            self.assertIn("https://github.com/daniel-carranza/HoTT-Rosetta/blob/main/data/agda-reviews.json", page)
+            self.assertIn('on the "main" branch. Remember to pull frequently!', page)
+            self.assertIn("saved <em>locally</em> in the file <code>data/agda-reviews.json</code>", page)
+            self.assertIn('"main" branch of daniel-carranza/HoTT-Rosetta', page)
+
+    def test_sharing_notice_shows_only_actionable_counts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._repository(directory)
+            clean = sync_status(root)
+            scenarios = [
+                ({"dirty_reviews": ["data/agda-reviews.json"]}, "Uncommitted review files: 1"),
+                ({"ahead": 1}, "Unpushed commits: 1"),
+                ({"ahead": 2, "unpushed_review_commits": 1}, "Unpushed review commits: 1"),
+                ({"behind": 3}, "Incoming commits: 3"),
+                ({"ahead": None, "behind": None, "unpushed_review_commits": None}, "Remote status is unknown"),
+                ({"writable": False, "branch": "topic", "reason": "Review writes are blocked"}, "Review writes are blocked"),
+            ]
+            for changes, expected in scenarios:
+                with self.subTest(changes=changes):
+                    page = render_review_sharing({**clean, **changes}, "token")
+                    self.assertIn("review-sharing-status", page)
+                    self.assertIn(expected, page)
+                    self.assertIn("/sync-refresh", page)
+                    self.assertIn("Remote counts reflect the last fetch", page)
+                    self.assertNotIn("Unpushed commits: 0", page)
+                    self.assertNotIn("Unpushed review commits: 0", page)
+                    self.assertNotIn("Uncommitted review files: 0", page)
+                    self.assertNotIn("Incoming commits: 0", page)
+                    self.assertNotIn("None", page)
+                    self.assertNotIn("Shared reviews belong to development main", page)
+                    self.assertIn("review-sharing-tip", page)
+
+    def test_sharing_notice_escapes_git_details_and_hides_unavailable_fetch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            sharing = sync_status(Path(directory))
+            sharing.update(branch="<branch>", reason="<problem>")
+            page = render_review_sharing(sharing, "token")
+            self.assertIn("review-sharing-status", page)
+            self.assertIn("&lt;branch&gt;", page)
+            self.assertIn("&lt;problem&gt;", page)
+            self.assertNotIn("/sync-refresh", page)
 
 
 if __name__ == "__main__":

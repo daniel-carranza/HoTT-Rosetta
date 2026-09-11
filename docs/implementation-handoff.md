@@ -91,9 +91,12 @@ publishing; reconcile any intervening contributions rather than force-pushing.
 
 ## Shared review synchronization follow-up
 
-The review UI now reports branch, uncommitted reviews, unpushed review commits,
-and last-known remote divergence. Fetching status is explicit. Shared review
-writes are restricted to canonical development main; public/release trees and
+The review UI reports branch and relevant sharing counts only when there are
+uncommitted reviews, unpushed/incoming commits, unknown remote status, or blocked
+review writes. A muted tip explains the review file and sharing workflow;
+clean, synchronized checkouts show no Git-status notice. Fetching status is
+explicit. Shared review writes are restricted to canonical development main;
+public/release trees and
 historical snapshots are not alternate review stores. Reviews are shared by
 Git, not automatically by saving in the browser.
 

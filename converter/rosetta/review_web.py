@@ -21,7 +21,7 @@ from .agda_scratchpad import (
     save_scratchpad,
 )
 from .editing import EditConflict
-from .review_sync import sync_status, require_review_branch
+from .review_sync import REPOSITORY, STORES, sync_status, require_review_branch
 from .agda_review import (
     AGDA_REVIEW_STATES,
     AgdaReviewRecord,
@@ -88,6 +88,8 @@ table { width: 100%; border-collapse: collapse; } th, td { padding: .55rem; bord
 .sort-button:hover, .sort-button:focus-visible { color: #174ea6; text-decoration: underline; }
 .sort-indicator { display: inline-block; min-width: 1.1em; text-align: center; }
 .warning { border-left: .3rem solid #d93025; padding-left: .8rem; }
+.review-sharing-tip { color: #6b7075; font-size: .875rem; line-height: 1.5; margin-bottom: 1rem; }
+.review-sharing-tip a { color: inherit; }
 @media (max-width: 850px) { .columns { grid-template-columns: 1fr; } .statement { grid-column: auto; } }
 """
 
@@ -111,6 +113,49 @@ def _layout(title: str, body: str) -> str:
         f"<meta name='viewport' content='width=device-width'><title>{html.escape(title)}</title>"
         f"<style>{STYLE}</style></head><body><header><h1>{html.escape(title)}</h1>"
         "</header><main>" + body + "</main></body></html>"
+    )
+
+
+def render_review_sharing(sharing: dict, token: str) -> str:
+    messages = []
+    if not sharing["writable"]:
+        messages.append(sharing["reason"])
+    if sharing["dirty_reviews"]:
+        messages.append(f"Uncommitted review files: {len(sharing['dirty_reviews'])}. Commit and push to share them.")
+    if sharing["ahead"]:
+        messages.append(f"Unpushed commits: {sharing['ahead']}.")
+    if sharing["unpushed_review_commits"]:
+        messages.append(f"Unpushed review commits: {sharing['unpushed_review_commits']}.")
+    if sharing["behind"]:
+        messages.append(f"Incoming commits: {sharing['behind']}. Pull to receive the latest changes.")
+    if sharing["remote"] and (sharing["ahead"] is None or sharing["behind"] is None):
+        messages.append("Remote status is unknown. Fetch review status to check for incoming or unpushed commits.")
+    status = ""
+    if messages:
+        status = (
+            "<aside class='panel warning review-sharing-status'><strong>Review sharing</strong>"
+            f"<p>Branch: {html.escape(sharing['branch'])}.</p>"
+            + "".join(f"<p>{html.escape(message)}</p>" for message in messages)
+        )
+        if sharing["remote"]:
+            status += (
+                "<p>Remote counts reflect the last fetch.</p>"
+                "<form method='post' action='/sync-refresh'>"
+                f"<input type='hidden' name='token' value='{html.escape(token)}'>"
+                "<button>Fetch review status (does not merge or push)</button></form>"
+            )
+        status += "</aside>"
+    review_path = html.escape(STORES["agda"][0])
+    repository = html.escape(REPOSITORY)
+    return status + (
+        "<aside class='review-sharing-tip'>"
+        "<p>The most up-to-date reviews are found in "
+        f"<a href='https://github.com/{repository}/blob/main/{review_path}'>{review_path}</a> "
+        'on the "main" branch. Remember to pull frequently!</p>'
+        "<p>When you review a file, e.g. approving/rejecting or leaving a comment, "
+        f"your changes are saved <em>locally</em> in the file <code>{review_path}</code>. "
+        'Please commit and push any changes to the "main" branch of '
+        f"{repository} to make them public to other collaborators.</p></aside>"
     )
 
 
@@ -671,19 +716,7 @@ def make_handler(root: Path, token: str = ""):
         def _send(self, status: int, content: str, content_type: str = "text/html; charset=utf-8"):
             if content_type.startswith("text/html"):
                 sharing = sync_status(root)
-                banner = (
-                    "<aside class='panel warning'><strong>Shared reviews: development main</strong>"
-                    f"<p>Branch: {html.escape(sharing['branch'])}. "
-                    f"Last-known remote: {sharing['ahead']} commits ahead / {sharing['behind']} behind. "
-                    f"Unpushed review commits: {sharing['unpushed_review_commits']}. "
-                    f"Uncommitted review files: {len(sharing['dirty_reviews'])}.</p>"
-                    f"<p>{html.escape(sharing['reason'])}</p>"
-                    "<p>Saving a review is local, not a commit or push. Commit and push to share; "
-                    "pull to receive other reviews. Refresh the remote status explicitly:</p>"
-                    "<form method='post' action='/sync-refresh'>"
-                    f"<input type='hidden' name='token' value='{html.escape(token)}'>"
-                    "<button>Fetch review status (does not merge or push)</button></form></aside>"
-                )
+                banner = render_review_sharing(sharing, token)
                 content = content.replace("<main>", "<main>" + banner, 1)
             encoded = content.encode()
             self.send_response(status)
