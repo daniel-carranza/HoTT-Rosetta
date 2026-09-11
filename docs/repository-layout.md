@@ -57,10 +57,13 @@ must be excluded. The old book/ path is normalized for migration comparisons.
 They make no changes and do not regenerate files. An exact result checks bytes
 and file modes; it does not establish mathematical completeness.
 
-For the initial transition, preserve release's README and latex-book/ rename,
-incorporate the newer public content, and make one focused reconciliation commit
-on release. Inspect the final public tree before publishing. Use ordinary
-fast-forward pushes; never rewrite public history or overwrite new remote work.
+The initial transition preserves release's README and latex-book/ rename and
+incorporates the newer public content. The reconciled release also records the
+accepted public ancestry without importing development files. Inspect the final
+public tree and verify that the latest public main is an ancestor of release
+before publishing. Use ordinary fast-forward pushes; never rewrite public
+history or overwrite new remote work. See implementation-handoff.md for the
+validated commits and publication status.
 
 The token in the current environment permits publishing to the fork only.
 Prepare and validate the fork release first. A maintainer with access to the

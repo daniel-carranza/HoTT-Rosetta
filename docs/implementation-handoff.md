@@ -54,18 +54,25 @@ repository checks, and whitespace checks pass. The skill frontmatter was
 validated with Ruby's YAML parser; the bundled Python validator lacks PyYAML
 in this environment.
 
-The local HTTP smoke test is pending sandbox permission: starting the server
+GitHub CI passed the full 201-test suite, including the review-server HTTP smoke
+test, content-preservation checks, and aggregate Chapters 1--22 with Agda 2.8.0:
+https://github.com/daniel-carranza/HoTT-Rosetta/actions/runs/34631141699
+This run validates backend commit 01e13b5. Locally, starting the HTTP server
 works, but connecting to 127.0.0.1 is denied, including one elevated retry.
-Do not work around that restriction. The user has been asked to enable loopback
-connections or run the test externally.
+Do not work around that restriction; CI supplies the external smoke-test result.
 
-The reconciled public release is commit 76cb07a. Its shared content matches
+The reconciled public snapshot is commit 76cb07a. Release 86105c4 records the
+accepted public ancestry without changing that snapshot's tree. Both release
+and development main have been pushed to the fork. Their shared content matches
 development main, and its only roots are README.md, BENCHMARK.md, latex-book/,
 and the configured Rosetta directory. Release's development-only .gitignore
 was removed; it remains recoverable from Git history and remains in development.
-Content commits on main are 4a51cec and 7299716. The backend change is separate.
+Content commits on main are 4a51cec and 7299716. The backend commit is 01e13b5.
 The available token is limited to the fork; publishing the prepared release
-into EgbertRijke/HoTT-Rosetta requires a maintainer with access.
+into EgbertRijke/HoTT-Rosetta requires a maintainer with access and remains
+outstanding. Release descends from the inspected public main ab71ec2, permitting
+a normal fast-forward publication. Fetch and check public main again before
+publishing; reconcile any intervening contributions rather than force-pushing.
 
 ## Future mathematics
 
