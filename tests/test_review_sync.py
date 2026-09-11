@@ -14,9 +14,9 @@ from rosetta.agda_review import update_agda_review, load_agda_review_store, _wit
 from rosetta.editing import EditConflict
 from rosetta.review_sync import (
     git, merge_stores, merge_pending, resolve_pending, review_conflicts,
-    require_review_branch, sync_status,
+    require_review_branch, review_change_details, sync_status,
 )
-from rosetta.review_web import STYLE, make_handler, render_review_sharing
+from rosetta.review_web import STYLE, make_handler, render_index, render_review_sharing
 from rosetta.review import discover_diagram_reviews, update_diagram_review, load_review_store, _stored_item
 
 
@@ -219,7 +219,7 @@ class ReviewSyncTests(unittest.TestCase):
             self.assertEqual(handler._send.call_args.args[0], 400)
             self.assertIn("Keep my text", handler._send.call_args.args[1])
 
-    def test_clean_html_responses_show_only_muted_sharing_tip_without_network(self):
+    def test_clean_html_responses_do_not_inject_status_or_tip(self):
         with tempfile.TemporaryDirectory() as directory:
             root = self._repository(directory)
             with patch("rosetta.review_web.threading.Thread.start"):
@@ -238,12 +238,35 @@ class ReviewSyncTests(unittest.TestCase):
             self.assertNotIn("Unpushed", page)
             self.assertNotIn("/sync-refresh", page)
             self.assertNotIn("Shared reviews belong to development main", page)
-            self.assertIn("class='review-sharing-tip'", page)
-            self.assertIn(".review-sharing-tip { color: #6b7075;", STYLE)
-            self.assertIn("https://github.com/daniel-carranza/HoTT-Rosetta/blob/main/data/agda-reviews.json", page)
-            self.assertIn('on the "main" branch. Remember to pull frequently!', page)
-            self.assertIn("saved <em>locally</em> in the file <code>data/agda-reviews.json</code>", page)
-            self.assertIn('"main" branch of daniel-carranza/HoTT-Rosetta', page)
+            self.assertNotIn("review-sharing-tip", page)
+
+    def test_tip_follows_index_introduction_in_normal_text(self):
+        page = render_index([])
+        self.assertIn("Review the book text, Rosetta Agda code, and recorded source side by side.</p>"
+                      "<div class='review-sharing-tip'>", page)
+        self.assertEqual(page.count("class='review-sharing-tip'"), 1)
+        self.assertNotIn(".review-sharing-tip", STYLE)
+        self.assertIn("https://github.com/daniel-carranza/HoTT-Rosetta/blob/main/data/agda-reviews.json", page)
+        self.assertIn('on the "main" branch. Remember to pull frequently!', page)
+        self.assertIn("saved <em>locally</em> in the file <code>data/agda-reviews.json</code>", page)
+        self.assertIn('"main" branch of daniel-carranza/HoTT-Rosetta', page)
+
+    def test_html_responses_include_collapsed_change_details_without_repeating_tip(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._repository(directory)
+            (root / "data/agda-reviews.json").write_text(json.dumps(store("approved")))
+            with patch("rosetta.review_web.threading.Thread.start"):
+                cls = make_handler(root, "token")
+            handler = cls.__new__(cls)
+            handler.send_response = Mock()
+            handler.send_header = Mock()
+            handler.end_headers = Mock()
+            handler.wfile = io.BytesIO()
+            handler._send(200, render_index([]))
+            page = handler.wfile.getvalue().decode()
+            self.assertIn("<details class='review-sharing-details'><summary>Uncommitted review changes", page)
+            self.assertIn("agda review block: pending → approved", page)
+            self.assertEqual(page.count("class='review-sharing-tip'"), 1)
 
     def test_sharing_notice_shows_only_actionable_counts(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -270,7 +293,7 @@ class ReviewSyncTests(unittest.TestCase):
                     self.assertNotIn("Incoming commits: 0", page)
                     self.assertNotIn("None", page)
                     self.assertNotIn("Shared reviews belong to development main", page)
-                    self.assertIn("review-sharing-tip", page)
+                    self.assertNotIn("review-sharing-tip", page)
 
     def test_sharing_notice_escapes_git_details_and_hides_unavailable_fetch(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -281,6 +304,112 @@ class ReviewSyncTests(unittest.TestCase):
             self.assertIn("&lt;branch&gt;", page)
             self.assertIn("&lt;problem&gt;", page)
             self.assertNotIn("/sync-refresh", page)
+
+    def test_review_details_separate_staged_unstaged_and_unpushed_without_writes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._repository(directory)
+            path = root / "data/agda-reviews.json"
+            path.write_text(json.dumps(store("approved")))
+            git(root, "commit", "-am", "Approve block")
+            path.write_text(json.dumps(store("approved", comments=["staged comment"])))
+            git(root, "add", "data/agda-reviews.json")
+            path.write_text(json.dumps(store("rejected", comments=["staged comment", "unstaged comment"])))
+            before = (path.read_bytes(), git(root, "show", ":data/agda-reviews.json").stdout,
+                      git(root, "rev-parse", "HEAD").stdout)
+            with patch("rosetta.review_sync.git", wraps=git) as commands:
+                details = review_change_details(root, sync_status(root))
+            self.assertFalse(any("fetch" in call.args for call in commands.call_args_list))
+            self.assertEqual(details["errors"], [])
+            self.assertEqual(details["staged"][0]["items"][0]["summary"], "comments changed")
+            self.assertEqual(details["unstaged"][0]["items"][0]["summary"], "approved → rejected; comments changed")
+            self.assertEqual(details["commits"][0]["subject"], "Approve block")
+            self.assertEqual(details["commits"][0]["reviews"][0]["items"][0]["summary"], "pending → approved")
+            self.assertEqual(before, (path.read_bytes(), git(root, "show", ":data/agda-reviews.json").stdout,
+                                     git(root, "rev-parse", "HEAD").stdout))
+
+    def test_staged_review_reversed_in_worktree_is_still_uncommitted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._repository(directory)
+            path = root / "data/agda-reviews.json"
+            original = path.read_bytes()
+            path.write_text(json.dumps(store("approved")))
+            git(root, "add", "data/agda-reviews.json")
+            path.write_bytes(original)
+            status = sync_status(root)
+            self.assertEqual(status["dirty_reviews"], ["data/agda-reviews.json"])
+            details = review_change_details(root, status)
+            self.assertEqual(details["staged"][0]["items"][0]["summary"], "pending → approved")
+            self.assertEqual(details["unstaged"][0]["items"][0]["summary"], "approved → pending")
+
+    def test_unpushed_details_exclude_incoming_only_reviews_on_diverged_remote(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._repository(directory)
+            path = root / "data/agda-reviews.json"
+            git(root, "switch", "-c", "incoming")
+            path.write_text(json.dumps({"version": 1, "blocks": {"incoming-only": {"state": "approved"}}}))
+            git(root, "commit", "-am", "Incoming review")
+            git(root, "update-ref", "refs/remotes/fork/main", "HEAD")
+            git(root, "switch", "main")
+            path.write_text(json.dumps(store("rejected")))
+            git(root, "commit", "-am", "Local review")
+            (root / "README.md").write_text("A local documentation edit")
+            git(root, "add", "README.md")
+            git(root, "commit", "-m", "Documentation edit")
+            details = review_change_details(root, sync_status(root))
+            self.assertEqual(len(details["commits"]), 2)
+            self.assertEqual(details["commits"][0]["files"], ["README.md"])
+            self.assertEqual(details["commits"][1]["reviews"][0]["items"][0]["id"], "block")
+            self.assertNotIn("incoming-only", json.dumps(details))
+            self.assertEqual(details["staged"], [])
+            self.assertEqual(details["unstaged"], [])
+
+    def test_details_handle_untracked_diagrams_deleted_reviews_and_formatting(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._repository(directory)
+            path = root / "data/agda-reviews.json"
+            path.write_text(json.dumps(store(), indent=2))
+            diagram_path = root / "data/diagram-reviews.json"
+            diagram_path.write_text(json.dumps({"version": 1, "diagrams": {"diagram": {"state": "approved"}}}))
+            details = review_change_details(root, sync_status(root))
+            self.assertEqual(details["unstaged"][0]["items"], [])
+            self.assertEqual(details["unstaged"][1]["items"][0]["kind"], "diagram")
+            self.assertIn("review added", details["unstaged"][1]["items"][0]["summary"])
+            path.unlink()
+            details = review_change_details(root, sync_status(root))
+            self.assertIn("review removed", details["unstaged"][0]["items"][0]["summary"])
+
+    def test_details_report_invalid_json_and_unmerged_files_without_failing_page(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._repository(directory)
+            path = root / "data/agda-reviews.json"
+            path.write_text("invalid JSON")
+            details = review_change_details(root, sync_status(root))
+            self.assertIn("Cannot list individual reviews", details["unstaged"][0]["error"])
+            path.write_text(json.dumps(store()))
+            self._diverge(root, store("approved"), store("rejected"))
+            details = review_change_details(root, sync_status(root))
+            self.assertIn("unresolved Git merge", details["errors"][0])
+
+    def test_review_detail_lists_start_collapsed_link_known_items_and_escape_text(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._repository(directory)
+            path = root / "data/agda-reviews.json"
+            path.write_text(json.dumps(store("approved")))
+            git(root, "commit", "-am", "<script>bad subject</script>")
+            path.write_text(json.dumps(store("approved", comments=["local"])))
+            sharing = sync_status(root)
+            details = review_change_details(root, sharing)
+            record = replace(test_agda_review.AgdaReviewTests()._record(), block_id="block",
+                             item_id="Definition 1.2", destination="<file>.lagda.md")
+            page = render_review_sharing(sharing, "token", details, [record])
+            self.assertEqual(page.count("<details class='review-sharing-details'>"), 2)
+            self.assertNotIn(" open", page)
+            self.assertIn("<summary>Uncommitted review changes</summary>", page)
+            self.assertIn("<summary>Committed but not pushed</summary>", page)
+            self.assertIn("href='/agda/block'", page)
+            self.assertIn("Definition 1.2 — &lt;file&gt;.lagda.md", page)
+            self.assertIn("&lt;script&gt;bad subject&lt;/script&gt;", page)
+            self.assertNotIn("<script>", page)
 
 
 if __name__ == "__main__":

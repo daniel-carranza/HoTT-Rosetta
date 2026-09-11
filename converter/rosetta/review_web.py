@@ -21,7 +21,7 @@ from .agda_scratchpad import (
     save_scratchpad,
 )
 from .editing import EditConflict
-from .review_sync import REPOSITORY, STORES, sync_status, require_review_branch
+from .review_sync import REPOSITORY, STORES, review_change_details, sync_status, require_review_branch
 from .agda_review import (
     AGDA_REVIEW_STATES,
     AgdaReviewRecord,
@@ -88,8 +88,9 @@ table { width: 100%; border-collapse: collapse; } th, td { padding: .55rem; bord
 .sort-button:hover, .sort-button:focus-visible { color: #174ea6; text-decoration: underline; }
 .sort-indicator { display: inline-block; min-width: 1.1em; text-align: center; }
 .warning { border-left: .3rem solid #d93025; padding-left: .8rem; }
-.review-sharing-tip { color: #6b7075; font-size: .875rem; line-height: 1.5; margin-bottom: 1rem; }
-.review-sharing-tip a { color: inherit; }
+.review-sharing-details { margin: .75rem 0; }
+.review-sharing-details summary { cursor: pointer; }
+.review-sharing-details li { margin: .4rem 0; overflow-wrap: anywhere; }
 @media (max-width: 850px) { .columns { grid-template-columns: 1fr; } .statement { grid-column: auto; } }
 """
 
@@ -116,7 +117,52 @@ def _layout(title: str, body: str) -> str:
     )
 
 
-def render_review_sharing(sharing: dict, token: str) -> str:
+def _render_review_changes(changes: list, records: dict) -> str:
+    rows = []
+    for change in changes:
+        items = []
+        for item in change["items"]:
+            record = records.get(item["id"]) if item["kind"] == "agda" else None
+            if record:
+                label = html.escape(f"{record.item_id} — {record.destination}")
+                label = f"<a href='/agda/{quote(item['id'], safe='')}'>{label}</a>"
+            else:
+                label = html.escape(f"{item['kind']} review {item['id']}")
+            items.append(f"<li>{label}: {html.escape(item['summary'])}</li>")
+        body = "<ul>" + "".join(items) + "</ul>" if items else "<p>Formatting or store metadata changed.</p>"
+        if change.get("error"):
+            body = f"<p>{html.escape(change['error'])}</p>"
+        rows.append(f"<li><code>{html.escape(change['file'])}</code>{body}</li>")
+    return "<ul>" + "".join(rows) + "</ul>" if rows else ""
+
+
+def _render_sharing_details(details: dict, records: list) -> str:
+    by_id = {record.block_id: record for record in records}
+    result = ""
+    if details["staged"] or details["unstaged"]:
+        result += "<details class='review-sharing-details'><summary>Uncommitted review changes</summary>"
+        for group, title in (("staged", "Staged (ready to commit)"), ("unstaged", "Unstaged (not yet staged)")):
+            if details[group]:
+                result += f"<h3>{title}</h3>" + _render_review_changes(details[group], by_id)
+        result += "</details>"
+    if details["commits"]:
+        result += "<details class='review-sharing-details'><summary>Committed but not pushed</summary>"
+        result += "<p>Local commits absent from the last-known remote main; changes shown per commit (against its first parent).</p><ul>"
+        for commit in details["commits"]:
+            result += f"<li><code>{html.escape(commit['sha'][:7])}</code> {html.escape(commit['subject'])}"
+            result += _render_review_changes(commit["reviews"], by_id)
+            review_files = {change["file"] for change in commit["reviews"]}
+            other_files = [name for name in commit["files"] if name not in review_files]
+            if other_files:
+                result += "<ul>" + "".join(f"<li><code>{html.escape(name)}</code></li>" for name in other_files) + "</ul>"
+            result += "</li>"
+        result += "</ul></details>"
+    for error in details["errors"]:
+        result += f"<p>{html.escape(error)}</p>"
+    return result
+
+
+def render_review_sharing(sharing: dict, token: str, details=None, records=()) -> str:
     messages = []
     if not sharing["writable"]:
         messages.append(sharing["reason"])
@@ -137,6 +183,8 @@ def render_review_sharing(sharing: dict, token: str) -> str:
             f"<p>Branch: {html.escape(sharing['branch'])}.</p>"
             + "".join(f"<p>{html.escape(message)}</p>" for message in messages)
         )
+        if details is not None:
+            status += _render_sharing_details(details, records)
         if sharing["remote"]:
             status += (
                 "<p>Remote counts reflect the last fetch.</p>"
@@ -145,17 +193,21 @@ def render_review_sharing(sharing: dict, token: str) -> str:
                 "<button>Fetch review status (does not merge or push)</button></form>"
             )
         status += "</aside>"
+    return status
+
+
+def render_review_tip() -> str:
     review_path = html.escape(STORES["agda"][0])
     repository = html.escape(REPOSITORY)
-    return status + (
-        "<aside class='review-sharing-tip'>"
+    return (
+        "<div class='review-sharing-tip'>"
         "<p>The most up-to-date reviews are found in "
         f"<a href='https://github.com/{repository}/blob/main/{review_path}'>{review_path}</a> "
         'on the "main" branch. Remember to pull frequently!</p>'
         "<p>When you review a file, e.g. approving/rejecting or leaving a comment, "
         f"your changes are saved <em>locally</em> in the file <code>{review_path}</code>. "
         'Please commit and push any changes to the "main" branch of '
-        f"{repository} to make them public to other collaborators.</p></aside>"
+        f"{repository} to make them public to other collaborators.</p></div>"
     )
 
 
@@ -212,6 +264,7 @@ def render_index(
     )
     body = (
         "<p>Review the book text, Rosetta Agda code, and recorded source side by side.</p>"
+        f"{render_review_tip()}"
         f"<p><a href='/read'>Read {file_count} generated .lagda.md files</a> · "
         f"<a href='/missing-agda'>View {missing_count} mathematical items missing Agda</a></p>"
         f"<div class='summary'>{summary}</div><h2>Agda review items</h2>"
@@ -716,7 +769,8 @@ def make_handler(root: Path, token: str = ""):
         def _send(self, status: int, content: str, content_type: str = "text/html; charset=utf-8"):
             if content_type.startswith("text/html"):
                 sharing = sync_status(root)
-                banner = render_review_sharing(sharing, token)
+                details = review_change_details(root, sharing) if sharing["dirty_reviews"] or sharing["ahead"] else None
+                banner = render_review_sharing(sharing, token, details, record_cache["records"] or ())
                 content = content.replace("<main>", "<main>" + banner, 1)
             encoded = content.encode()
             self.send_response(status)

@@ -20,14 +20,32 @@ push, or publish anything. Other developers receive committed reviews by pulling
 Review metadata stays development-only, never in release or the public repository.
 Historical tags are frozen evidence, not additional live review stores.
 
-Browser pages show a muted tip explaining where reviews are saved and how to
-share them. Git status stays hidden when the checkout is ready for reviews and
+The review index explains where reviews are saved and how to share them directly
+after its introductory sentence, using normal text styling. Other pages do not
+repeat this tip. Git status stays hidden when the checkout is ready for reviews and
 matches the last-known remote main. A notice appears for uncommitted reviews,
 unpushed or incoming commits, unknown remote status, or blocked review writes.
 Only relevant counts are shown. The notice's explicit Fetch review status button
 refreshes the remote reference only; it never merges, stashes, resets, commits,
 or pushes. Counts may be outdated until fetched; when the notice is hidden, use
 review-sync status --fetch to check for new remote changes.
+
+The notice includes collapsed lists you can click to expand or collapse:
+
+- Uncommitted review changes: staged and unstaged changes listed separately,
+  identifying each review item and whether its decision, comments, or evidence
+  changed. A review can appear in both groups when it has further edits after
+  staging. This also includes new or deleted review records and files.
+- Committed but not pushed: local-only commit IDs and subjects, changed files,
+  and individual review changes against each commit's first parent. Incoming-only
+  commits are excluded even when local and remote main have diverged. This is a
+  per-commit history, so an edit and its later reversal can both appear.
+
+Recognized Agda review items link to their current review pages; unavailable
+historical items and diagram reviews show their identifiers. The lists only read
+Git and review files; they never stage, commit, push, or change anything. Unmerged
+or unreadable files show an explanation instead of misleading item details.
+
 Shared review writes are allowed only on development main with a remote pointing
 to the canonical fork. Topic branches, archival branches, and detached tags are
 read-only for shared reviews. Resolve Git/review conflicts before reviewing again.

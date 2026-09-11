@@ -51,7 +51,8 @@ def sync_status(root, fetch=False):
         git(root, "fetch", "--no-tags", remote, "refs/heads/main:refs/remotes/" + remote + "/main")
     paths = [value[0] for value in STORES.values()]
     result["dirty_reviews"] = sorted(set(
-        git(root, "diff", "--name-only", "HEAD", "--", *paths).stdout.splitlines()
+        git(root, "diff", "--cached", "--name-only", "HEAD", "--", *paths).stdout.splitlines()
+        + git(root, "diff", "--name-only", "--", *paths).stdout.splitlines()
         + git(root, "ls-files", "--others", "--exclude-standard", "--", *paths).stdout.splitlines()))
     result["unmerged"] = git(root, "diff", "--name-only", "--diff-filter=U").stdout.splitlines()
     try:
@@ -76,6 +77,91 @@ def sync_status(root, fetch=False):
     else:
         result.update(writable=True, reason="Shared reviews belong to development main.")
     return result
+
+
+def _review_snapshot(root, filename, revision):
+    """Read a review file without checking out or changing any Git state."""
+    if revision is None:
+        path = root / filename
+        return path.read_text() if path.exists() else None
+    result = git(root, "show", f"{revision}:{filename}", check=False)
+    if not result.returncode:
+        return result.stdout
+    present = (git(root, "ls-files", "--", filename).stdout if revision == "" else
+               git(root, "ls-tree", revision, "--", filename).stdout)
+    if present:
+        raise ValueError(f"Cannot read {filename} from {revision or 'the index'}")
+    return None
+
+
+def _review_file_change(kind, before, after):
+    if before == after:
+        return None
+    filename, collection = STORES[kind]
+    result = {"file": filename, "items": []}
+    try:
+        old, new = [validate_store(json.loads(text), collection)[collection]
+                    if text is not None else {} for text in (before, after)]
+        for key in sorted(old.keys() | new.keys()):
+            if old.get(key) == new.get(key):
+                continue
+            left, right = old.get(key, {}), new.get(key, {})
+            changes = []
+            if key not in old:
+                changes.append("review added")
+            elif key not in new:
+                changes.append("review removed")
+            if left.get("state", "pending") != right.get("state", "pending"):
+                changes.append(f"{left.get('state', 'pending')} → {right.get('state', 'pending')}")
+            if left.get("comments", []) != right.get("comments", []):
+                changes.append("comments changed")
+            result["items"].append({"kind": kind, "id": key,
+                                    "summary": "; ".join(changes) or "review evidence or metadata changed"})
+    except (ValueError, TypeError) as error:
+        result["error"] = f"Cannot list individual reviews: {error}"
+    return result
+
+
+def review_change_details(root, sharing):
+    """List staged/unstaged reviews and local-only commits. Never fetch or write."""
+    details = {"staged": [], "unstaged": [], "commits": [], "errors": []}
+    try:
+        head = git(root, "rev-parse", "HEAD").stdout.strip()
+        for kind, (filename, _) in STORES.items():
+            if filename not in sharing["dirty_reviews"]:
+                continue
+            if filename in sharing["unmerged"]:
+                details["errors"].append(f"{filename}: unresolved Git merge; resolve it to inspect staged/unstaged reviews.")
+                continue
+            committed = _review_snapshot(root, filename, head)
+            staged = _review_snapshot(root, filename, "")
+            working = _review_snapshot(root, filename, None)
+            for group, before, after in (("staged", committed, staged), ("unstaged", staged, working)):
+                change = _review_file_change(kind, before, after)
+                if change:
+                    details[group].append(change)
+        if sharing["ahead"] and sharing["remote"]:
+            reference = "refs/remotes/" + sharing["remote"] + "/main"
+            commits = git(root, "log", "--format=%H%x00%s", reference + ".." + head).stdout.splitlines()
+            for line in commits:
+                sha, subject = line.split("\0", 1)
+                parents = git(root, "rev-list", "--parents", "-n", "1", sha).stdout.split()[1:]
+                parent = parents[0] if parents else None
+                paths = (git(root, "diff", "--name-only", "-z", parent, sha, "--") if parent else
+                         git(root, "diff-tree", "--root", "--no-commit-id", "--name-only", "-r", "-z", sha))
+                files = [name for name in paths.stdout.split("\0") if name]
+                commit = {"sha": sha, "subject": subject, "files": files, "reviews": []}
+                for kind, (filename, _) in STORES.items():
+                    if filename in files:
+                        change = _review_file_change(
+                            kind, _review_snapshot(root, filename, parent) if parent else None,
+                            _review_snapshot(root, filename, sha))
+                        if change:
+                            commit["reviews"].append(change)
+                details["commits"].append(commit)
+    except (OSError, ValueError) as error:
+        details["errors"].append(f"Could not finish reading Git review details: {error}")
+    return details
 
 
 def require_review_branch(root, allow_conflicts=False):

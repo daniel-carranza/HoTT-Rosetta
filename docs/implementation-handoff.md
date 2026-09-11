@@ -93,12 +93,15 @@ publishing; reconcile any intervening contributions rather than force-pushing.
 
 The review UI reports branch and relevant sharing counts only when there are
 uncommitted reviews, unpushed/incoming commits, unknown remote status, or blocked
-review writes. A muted tip explains the review file and sharing workflow;
+review writes. The index introduction explains the review file and sharing workflow
+in normal text, without repeating the tip on other pages. Collapsed sharing lists
+identify staged/unstaged review changes and unpushed commits with their changed
+files and review items. Git snapshots are read-only; staged changes remain visible
+even when unstaged edits reverse them. Incoming-only changes are not labeled local;
 clean, synchronized checkouts show no Git-status notice. Fetching status is
 explicit. Shared review writes are restricted to canonical development main;
-public/release trees and
-historical snapshots are not alternate review stores. Reviews are shared by
-Git, not automatically by saving in the browser.
+public/release trees and historical snapshots are not alternate review stores.
+Reviews are shared by Git, not automatically by saving in the browser.
 
 The review-sync commands merge concurrent comments, retain conflicting decisions
 with their own evidence, and resolve them without manual JSON edits. Git's
