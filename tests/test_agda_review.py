@@ -114,8 +114,10 @@ answer : Type
             saved = store["blocks"][record.block_id]
             self.assertEqual(saved["state"], "approved")
             self.assertEqual(
-                saved["comments"], [{"author": "Daniel C", "text": "Checked."}]
+                [{"author": c["author"], "text": c["text"]} for c in saved["comments"]],
+                [{"author": "Daniel C", "text": "Checked."}]
             )
+            self.assertTrue(saved["comments"][0]["id"])
             self.assertTrue(any((root / ".rosetta-backups").rglob("*")))
 
     def test_cached_record_avoids_rediscovering_all_reviews(self):

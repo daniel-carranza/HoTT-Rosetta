@@ -92,6 +92,16 @@ sidecar locks and recoverable backups. Unsupported locking fails closed.
 Draft saves, discards, and typecheck completions require the expected draft
 revision; stale browser tabs cannot overwrite newer draft work. These locks
 coordinate project tools, not independent manual JSON editors or helper scripts.
+Shared review metadata has one authoritative home: development main in the fork.
+It is shared by commits, ordinary merges, and pushes/pulls, never copied into
+content-only release or public trees. Archived snapshots are not synchronized.
+The UI reports local/remote sharing status and refuses shared review writes on
+other branches or detached tags. Fetching status is explicit and does not merge.
+Concurrent review-file changes stop at Git's merge boundary; review-sync merges
+comments and keeps each decision bound to its evidence. Conflicting decisions
+require an explicit choice, with both sides' comments preserved. A comment alone
+never refreshes an earlier decision's fingerprint. See review-guide.md for the
+workflow and JSON-free conflict-resolution commands.
 Unrecorded direct contributions are visible for review and whole-file checks;
 edit them directly until provenance is recorded.
 

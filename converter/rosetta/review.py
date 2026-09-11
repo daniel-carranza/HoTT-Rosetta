@@ -97,6 +97,8 @@ def _stored_item(item: DiagramReviewItem, store: dict) -> DiagramReviewItem:
     state = record.get("state", "pending")
     if record.get("source_sha256") != current_digest:
         state = "stale"
+    if record.get("decision_conflict"):
+        state = "conflict"
     comments = record.get("comments", [])
     if not isinstance(comments, list) or any(not isinstance(value, str) for value in comments):
         raise ValueError(f"Invalid comments for diagram {item.stable_id}")
@@ -141,12 +143,15 @@ def update_diagram_review(
 
     def update(store):
         record = store["diagrams"].setdefault(stable_id, {})
-        record["source_sha256"] = _source_digest(item.source)
+        if record.get("decision_conflict"):
+            raise ValueError("Resolve the conflicting review decisions with review-sync resolve first")
         if state is not None:
             if state not in {"pending", "approved"}:
                 raise ValueError(f"Unsupported review state: {state}")
             record["state"] = state
+            record["source_sha256"] = _source_digest(item.source)
         else:
+            record.setdefault("source_sha256", _source_digest(item.source))
             record.setdefault("state", item.state if item.state != "stale" else "pending")
         comments = record.setdefault("comments", [])
         if comment is not None:

@@ -89,6 +89,41 @@ outstanding. Release descends from the inspected public main ab71ec2, permitting
 a normal fast-forward publication. Fetch and check public main again before
 publishing; reconcile any intervening contributions rather than force-pushing.
 
+## Shared review synchronization follow-up
+
+The review UI now reports branch, uncommitted reviews, unpushed review commits,
+and last-known remote divergence. Fetching status is explicit. Shared review
+writes are restricted to canonical development main; public/release trees and
+historical snapshots are not alternate review stores. Reviews are shared by
+Git, not automatically by saving in the browser.
+
+The review-sync commands merge concurrent comments, retain conflicting decisions
+with their own evidence, and resolve them without manual JSON edits. Git's
+built-in binary merge behavior stops unsafe textual merges of review stores.
+CI validates review metadata independently of ordinary conversion checks.
+Adding a comment no longer turns a stale approval into a current one. No Rosetta,
+Agda, or provenance content changes are part of this follow-up.
+Decision forms also reject evidence changed since the reviewer opened the page.
+All 228 non-network tests, ordinary repository checks, the separate review
+integrity check, and whitespace checks pass locally. The single HTTP smoke test
+still needs the already-established external CI environment because local
+loopback connections are sandbox-blocked.
+
+The user's review commit 0e16bfc is preserved unchanged in development history.
+The proposal tip 2cc8b8ddbc6f93b7a1aa9ed1513e72d581b082cc is an ancestor of main.
+Its Agda comments are all present on main; its differing decisions were
+superseded by later human review commit 1576186 (with the newest user reviews in
+0e16bfc). Its diagram review store is empty. Do not restore old decisions over
+those newer human choices.
+
+The exact proposal tip is published under annotated tag
+archive/proposal-agda-exercise-solutions-2026-09-11 and its peeled remote commit
+was verified. GitHub refused creation of the tag-protection ruleset with HTTP
+403: Administration: write is required. The user has been asked to grant access
+or create an active tag ruleset restricting updates/deletions with no bypass.
+Until that protection is verified, the proposal branch is deliberately retained.
+Do not retry permission workarounds or delete the branch before protection.
+
 ## Future mathematics
 
 Resume section formalization in Chapter 15 when requested. Chapters 3--22 remain

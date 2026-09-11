@@ -1,0 +1,4 @@
+# Never let a line-based merge silently choose or combine review decisions.
+# Resolve concurrent review changes with: python3 rosetta.py review-sync merge
+data/agda-reviews.json merge=binary
+data/diagram-reviews.json merge=binary

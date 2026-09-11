@@ -38,6 +38,13 @@ docs/invisible-math.md for historical dependency and provenance evidence.
   permission issue, stop workarounds, explain the intended action and required
   permission, and ask the user. Fork access does not imply access to publish
   into EgbertRijke/HoTT-Rosetta.
+- Shared review decisions and comments belong on development main in the fork,
+  not public/release trees or retired branches. Preserve and publish deliberate
+  review commits. Inspect review-sync status; fetching is not pulling or pushing.
+  Use review-sync merge/resolve for concurrent review-file changes, preserving
+  both sides' comments and surfacing conflicting decisions. Never resolve a
+  review conflict by blindly taking one entire JSON file. A comment must not
+  renew a stale approval. See docs/review-guide.md.
 
 ## Validation
 

@@ -72,3 +72,17 @@ unauthorized pushes or treat an unpublished public update as completed.
 
 Build caches, disposable draft checks, and recoverable review backups are
 development artifacts, not a second maintained Rosetta.
+
+## Shared reviews and historical snapshots
+
+Review decisions and comments are tracked development data, authoritative on
+the fork's main branch. Developers exchange them through ordinary Git commits
+and merges. They are intentionally absent from the content-only release and
+original repository; content-diff therefore does not compare them. Use
+review-sync status and the workflow in review-guide.md for review synchronization.
+
+The proposal tip 2cc8b8ddbc6f93b7a1aa9ed1513e72d581b082cc is preserved by the
+annotated tag archive/proposal-agda-exercise-solutions-2026-09-11. Do not update
+that historical tag to match current content or reviews. It is a recovery point,
+not an active branch. Check implementation-handoff.md for protection/deletion
+status before taking further retirement actions.

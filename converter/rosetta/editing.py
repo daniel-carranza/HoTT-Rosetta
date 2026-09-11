@@ -100,9 +100,12 @@ def _read_optional(path: Path):
         return None
 
 
-def update_json_store(path: Path, root: Path, collection: str, update):
+def update_json_store(path: Path, root: Path, collection: str, update, *, allow_merge=False):
     """Read, modify, and atomically save one metadata snapshot under one lock."""
     with _metadata_lock(path, root):
+        if collection in {"blocks", "diagrams"} and (root / ".git").exists():
+            from .review_sync import require_review_branch
+            require_review_branch(root, allow_conflicts=allow_merge)
         original = _read_optional(path)
         store = json.loads(original) if original is not None else {"version": 1, collection: {}}
         if store.get("version") != 1 or not isinstance(store.get(collection), dict):

@@ -33,6 +33,8 @@ jobs:
         run: python3 -m unittest discover
       - name: Repository checks
         run: python3 rosetta.py check
+      - name: Shared review metadata integrity
+        run: python3 rosetta.py review-sync check
       - name: Whitespace checks
         run: git diff --check
 

@@ -6,9 +6,10 @@ import re
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import List, Optional
+from uuid import uuid4
 
 from .agda_manifest import AgdaBlock, load_manifest
-from .editing import update_json_store
+from .editing import EditConflict, update_json_store
 from .agda_typecheck import typecheck_result
 from .missing_agda import discover_missing_agda
 from .layout import rosetta_directory
@@ -175,6 +176,8 @@ def _with_stored_review(record: AgdaReviewRecord, store: dict) -> AgdaReviewReco
         raise ValueError(f"Invalid review state for Agda block {record.block_id}")
     if saved.get("review_sha256") and saved.get("review_sha256") != _review_digest(record):
         state = "stale"
+    if saved.get("decision_conflict"):
+        state = "conflict"
     return replace(record, state=state, comments=comments)
 
 
@@ -292,6 +295,7 @@ def update_agda_review(
     comment: Optional[str] = None,
     comment_author: str = "Reviewer",
     current_record: Optional[AgdaReviewRecord] = None,
+    expected_review_digest: Optional[str] = None,
 ) -> Path:
     if current_record is None:
         records = discover_agda_reviews(root)
@@ -305,6 +309,8 @@ def update_agda_review(
         current = current_record
     if state is not None and state not in AGDA_REVIEW_STATES:
         raise ValueError(f"Unsupported Agda review state: {state}")
+    if state is not None and expected_review_digest is not None and expected_review_digest != _review_digest(current):
+        raise EditConflict("The reviewed evidence changed after this page was opened; reload and review it before deciding")
     if current.provenance_kind == "missing" and state not in {None, "pending"}:
         raise ValueError(
             "An item with no Agda code cannot be approved, rejected, or marked "
@@ -314,17 +320,21 @@ def update_agda_review(
 
     def update(store):
         saved = store["blocks"].setdefault(block_id, {})
-        saved["review_sha256"] = _review_digest(current)
+        if saved.get("decision_conflict"):
+            raise ValueError("Resolve the conflicting review decisions with review-sync resolve first")
         if state is not None:
+            saved["review_sha256"] = _review_digest(current)
             saved["state"] = state
         else:
+            # A comment is not a new approval of changed evidence.
+            saved.setdefault("review_sha256", _review_digest(current))
             saved.setdefault("state", current.state if current.state != "stale" else "pending")
         comments = saved.setdefault("comments", [])
         if comment is not None:
             cleaned = comment.strip()
             if not cleaned:
                 raise ValueError("Review comments cannot be empty")
-            comments.append({"author": comment_author.strip() or "Reviewer", "text": cleaned})
+            comments.append({"id": uuid4().hex, "author": comment_author.strip() or "Reviewer", "text": cleaned})
 
     update_json_store(path, root, "blocks", update)
     return path

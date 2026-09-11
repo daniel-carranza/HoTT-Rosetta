@@ -162,7 +162,8 @@ for n in range(12):
         handler.rfile = io.BytesIO(body)
         handler._send = Mock()
         handler._redirect = Mock()
-        handler.do_POST()
+        with patch("rosetta.review_web.require_review_branch"):
+            handler.do_POST()
         return handler
 
     def test_old_confirmation_post_cannot_write_any_file(self):

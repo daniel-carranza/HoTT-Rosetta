@@ -552,6 +552,9 @@ def command_review(
         if web:
             serve_review(ROOT, port=port)
             return 0
+        if approve or comment:
+            from .review_sync import require_review_branch
+            require_review_branch(ROOT)
         if approve:
             path = update_diagram_review(ROOT, approve, state="approved")
             print(f"Approved diagram {approve} in {path.relative_to(ROOT)}.")
@@ -615,6 +618,19 @@ def build_parser() -> argparse.ArgumentParser:
         description="Convert and check the HoTT Rosetta book sources.",
     )
     subcommands = parser.add_subparsers(dest="command", required=True)
+    sync = subcommands.add_parser("review-sync", help="inspect shared review status and resolve review merges")
+    sync_actions = sync.add_subparsers(dest="action", required=True)
+    status = sync_actions.add_parser("status", help="show branch, uncommitted reviews, and last-known remote status")
+    status.add_argument("--fetch", action="store_true", help="explicitly refresh fork main; never merge or push")
+    status.add_argument("--json", action="store_true")
+    merge = sync_actions.add_parser("merge", help="merge an unresolved review file and stage it if conflict-free")
+    merge.add_argument("kind", choices=("agda", "diagram"))
+    resolve = sync_actions.add_parser("resolve", help="resolve a review decision without editing JSON")
+    resolve.add_argument("kind", choices=("agda", "diagram"))
+    resolve.add_argument("item_id")
+    resolve.add_argument("--choose", choices=("ours", "theirs", "pending"), required=True)
+    sync_actions.add_parser("conflicts", help="show both sides of unresolved review decisions")
+    sync_actions.add_parser("check", help="validate review JSON and reject unresolved decisions independently of conversion")
     content = subcommands.add_parser("content-diff", help="compare shared content in two committed branches")
     content.add_argument("target")
     content.add_argument("--source", default="HEAD")
@@ -719,6 +735,34 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> int:
     arguments = build_parser().parse_args(argv)
+    if arguments.command == "review-sync":
+        from .review_sync import sync_status, merge_pending, resolve_pending, review_conflicts
+        try:
+            if arguments.action == "status":
+                status = sync_status(ROOT, fetch=arguments.fetch)
+                if arguments.json:
+                    print(json.dumps(status, indent=2))
+                else:
+                    print(f"Branch: {status['branch']}; canonical remote: {status['remote'] or 'not configured'}")
+                    print(f"Last-known main: {status['ahead']} commits ahead, {status['behind']} behind. Use --fetch to refresh.")
+                    print(f"Unpushed review commits: {status['unpushed_review_commits']}; uncommitted review files: {', '.join(status['dirty_reviews']) or 'none'}")
+                    print(status['reason'])
+                return 0
+            if arguments.action in {"conflicts", "check"}:
+                conflicts = review_conflicts(ROOT)
+                print(json.dumps(conflicts, indent=2) if conflicts else "No review conflicts; review stores are valid.")
+                return 1 if conflicts else 0
+            remaining = (merge_pending(ROOT, arguments.kind) if arguments.action == "merge" else
+                         resolve_pending(ROOT, arguments.kind, arguments.item_id, arguments.choose))
+            if remaining:
+                print("Conflicting decisions: " + ", ".join(remaining))
+                print("Use review-sync conflicts, then review-sync resolve KIND ITEM --choose ours|theirs|pending.")
+                return 1
+            print("Review comments and decisions merged and staged. Inspect git diff --cached, then finish your Git merge/commit and push.")
+            return 0
+        except (OSError, ValueError, RuntimeError) as error:
+            print(str(error), file=sys.stderr)
+            return 2
     if arguments.command == "content-diff":
         from .publication import compare_content
         try:

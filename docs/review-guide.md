@@ -12,6 +12,88 @@ The loading page stays visible while files are indexed. The file reader shows
 current maintained prose and Agda. External edits refresh the index. The review
 table supports status filters, sorting, text search, and comment filters.
 
+## Sharing reviews
+
+Development main in daniel-carranza/HoTT-Rosetta is the single authoritative home
+for shared reviews. Saving in the browser writes locally; it does not commit,
+push, or publish anything. Other developers receive committed reviews by pulling.
+Review metadata stays development-only, never in release or the public repository.
+Historical tags are frozen evidence, not additional live review stores.
+
+Every browser page shows the branch, uncommitted review files, unpushed review
+commits, and ahead/behind counts relative to the last-known remote main. The
+explicit Fetch review status button refreshes that reference only; it never
+merges, stashes, resets, commits, or pushes. Counts may be outdated until fetched.
+Shared review writes are allowed only on development main with a remote pointing
+to the canonical fork. Topic branches, archival branches, and detached tags are
+read-only for shared reviews. Resolve Git/review conflicts before reviewing again.
+
+The remote may be named fork or origin; review-sync status identifies it. With
+a remote named fork, the normal workflow is:
+
+```text
+python3 rosetta.py review-sync status --fetch
+git merge fork/main
+python3 rosetta.py review --web
+```
+
+Before merging incoming changes, commit your existing work deliberately; never
+discard or auto-stash it. After reviewing, inspect and commit only the intended
+review files (data/agda-reviews.json and, if changed, data/diagram-reviews.json).
+Then fetch again, merge any incoming main changes, and push normally:
+
+```text
+python3 rosetta.py review-sync status --fetch
+git merge fork/main
+git push fork main
+```
+
+A rejected push means someone published first: fetch and merge again, never
+force-push. Separate developers' checkouts are synchronized through Git, not the
+local file locks. Scratchpads, compiler caches, and local backups are not shared.
+
+### Concurrent review changes
+
+The versioned .gitattributes uses Git's built-in binary merge behavior for the two
+review JSON stores. This deliberately stops concurrent whole-file edits instead
+of allowing a line merge to combine a decision with the wrong evidence hash.
+No custom Git merge-driver installation is required. GitHub's web merge may also
+stop on these files; resolve locally using the following commands, not by picking
+the entire "ours" or "theirs" file.
+
+After Git reports a review-file conflict:
+
+```text
+python3 rosetta.py review-sync merge agda
+python3 rosetta.py review-sync merge diagram
+```
+
+Run only the command for each file Git marked conflicted. Independent comments
+are retained and nonconflicting decisions are merged. New Agda comments have
+stable IDs; legacy comments are retained conservatively, including duplicates
+when distinct additions cannot be distinguished. A conflict-free result is
+staged, but never committed or pushed automatically.
+
+If decisions conflict, both versions and their original evidence are retained in
+the JSON, displayed as conflict rather than approved, and the file stays unmerged.
+Inspect the alternatives and choose explicitly without hand-editing JSON:
+
+```text
+python3 rosetta.py review-sync conflicts
+python3 rosetta.py review-sync resolve agda BLOCK_ID --choose ours
+```
+
+The choices are ours, theirs, or pending; for diagrams use diagram and DIAGRAM_ID.
+Only the decision is selected: both sides' comments remain. Selecting an old
+decision does not refresh its evidence. Once every conflict in that review file
+is resolved, it is staged. Inspect git diff --cached, finish any other Git merge
+conflicts, commit the merge, and push. The tool refuses to replace review-file
+edits made after Git stopped; preserve those edits before proceeding.
+
+python3 rosetta.py review-sync check validates the review stores and rejects
+unresolved decisions. CI runs this integrity check separately; ordinary Rosetta
+checks still do not require review approval or completeness.
+
 Each curated block shows the maintained code, recorded source, provenance,
 typecheck evidence, and reviewer comments. Directly added blocks without
 provenance records also appear, labeled unrecorded; they can be reviewed and
@@ -54,6 +136,10 @@ Metadata backups live under .rosetta-backups/. Scratchpad state and check eviden
 live under _build/rosetta-review/. These are ignored development artifacts.
 The review metadata in data/agda-reviews.json preserves comments and decisions.
 Changed evidence makes earlier decisions stale; nothing is silently reapproved.
+Adding a comment preserves the original decision fingerprint. Only an explicit
+decision action can approve the current evidence again.
+Decision forms also carry the evidence fingerprint shown to the reviewer; an
+old browser page cannot approve code that changed since that page was opened.
 
 Review decisions are optional. Pending means no decision, needs-further-review
 means inspected but undecided, and approved/rejected record explicit decisions.

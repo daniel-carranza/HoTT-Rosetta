@@ -21,9 +21,11 @@ from .agda_scratchpad import (
     save_scratchpad,
 )
 from .editing import EditConflict
+from .review_sync import sync_status, require_review_branch
 from .agda_review import (
     AGDA_REVIEW_STATES,
     AgdaReviewRecord,
+    _review_digest,
     discover_agda_reviews,
     missing_agda_block_id,
     update_agda_review,
@@ -115,7 +117,7 @@ def _layout(title: str, body: str) -> str:
 def render_index(
     records: list[AgdaReviewRecord], file_count: int = 0, missing_count: int = 0
 ) -> str:
-    displayed_states = (*AGDA_REVIEW_STATES, "stale")
+    displayed_states = (*AGDA_REVIEW_STATES, "stale", "conflict")
     counts = {
         state: sum(item.state == state for item in records)
         for state in displayed_states
@@ -521,6 +523,7 @@ def render_record(
         f"<ul>{comments or '<li>No comments yet.</li>'}</ul></section>"
         f"<form method='post' action='/agda/{quote(record.block_id)}'>"
         f"<input type='hidden' name='token' value='{html.escape(token)}'>"
+        f"<input type='hidden' name='review_digest' value='{html.escape(_review_digest(record))}'>"
         "<h3>Review decision</h3>"
         + (
             "<p>Review decisions are unavailable until candidate Agda code exists.</p>"
@@ -666,6 +669,22 @@ def make_handler(root: Path, token: str = ""):
 
     class ReviewHandler(BaseHTTPRequestHandler):
         def _send(self, status: int, content: str, content_type: str = "text/html; charset=utf-8"):
+            if content_type.startswith("text/html"):
+                sharing = sync_status(root)
+                banner = (
+                    "<aside class='panel warning'><strong>Shared reviews: development main</strong>"
+                    f"<p>Branch: {html.escape(sharing['branch'])}. "
+                    f"Last-known remote: {sharing['ahead']} commits ahead / {sharing['behind']} behind. "
+                    f"Unpushed review commits: {sharing['unpushed_review_commits']}. "
+                    f"Uncommitted review files: {len(sharing['dirty_reviews'])}.</p>"
+                    f"<p>{html.escape(sharing['reason'])}</p>"
+                    "<p>Saving a review is local, not a commit or push. Commit and push to share; "
+                    "pull to receive other reviews. Refresh the remote status explicitly:</p>"
+                    "<form method='post' action='/sync-refresh'>"
+                    f"<input type='hidden' name='token' value='{html.escape(token)}'>"
+                    "<button>Fetch review status (does not merge or push)</button></form></aside>"
+                )
+                content = content.replace("<main>", "<main>" + banner, 1)
             encoded = content.encode()
             self.send_response(status)
             self.send_header("Content-Type", content_type)
@@ -764,6 +783,14 @@ def make_handler(root: Path, token: str = ""):
                 form = parse_qs(self.rfile.read(length).decode(), keep_blank_values=True)
                 if form.get("token", [""])[0] != token:
                     raise ValueError("This review page has expired; reload it and try again")
+                if path == "/sync-refresh":
+                    sync_status(root, fetch=True)
+                    self._redirect("/")
+                    return
+                if path.startswith("/agda/") and not any(path.endswith("/" + action) for action in (
+                    "typecheck", "edit-preview", "edit-confirm", "scratch-promote"
+                )):
+                    require_review_branch(root)
                 if path.startswith("/agda/") and path.endswith("/typecheck"):
                     block_id = unquote(
                         path.removeprefix("/agda/").removesuffix("/typecheck")
@@ -851,6 +878,8 @@ def make_handler(root: Path, token: str = ""):
                     if not matches:
                         raise ValueError(f"Agda block not found: {block_id}")
                     state = form.get("state", [None])[0]
+                    if state is not None and not form.get("review_digest", [""])[0]:
+                        raise EditConflict("This decision form is outdated; reload and review the current evidence")
                     comment = form.get("comment", [""])[0].strip() or None
                     comment_author = form.get("comment_author", ["Reviewer"])[0]
                     if state is None and comment is None:
@@ -859,6 +888,7 @@ def make_handler(root: Path, token: str = ""):
                         root, block_id, state=state, comment=comment,
                         comment_author=comment_author,
                         current_record=matches[0],
+                        expected_review_digest=form.get("review_digest", [None])[0],
                     )
                     invalidate_records()
                     self._redirect("/agda/" + quote(block_id))
