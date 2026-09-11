@@ -998,18 +998,35 @@
       "state": "approved"
     },
     "exercise-7-3-decide-below-successor": {
-      "comments": [],
-      "review_sha256": "b305e2795bc59ac142505561756fea6f9b17388860dcca47ab4f7269ba5ebeb1",
-      "state": "approved"
+      "comments": [
+        {
+          "author": "Daniel C",
+          "id": "50aee6adaf854b349c4823f34e7c394d",
+          "text": "This might have been added as part of a later block of agda."
+        }
+      ],
+      "review_sha256": "e4a09445b37031577c5a7025a6dba25de46cbc7b664adcfa2baadb08767929dd",
+      "state": "needs-further-review"
     },
     "exercise-7-3-divisibility-factorial": {
       "comments": [],
-      "review_sha256": "95e47fb099efdd7001dc12ddf8ae8171b54eb6c0cd5eff69e80ebac7d6db2245",
+      "review_sha256": "cf0f976e1b83d05467ba59d4bd8a52154acad1cfe12f90a30262581bbba5b43f",
       "state": "approved"
     },
     "exercise-7-3-identity-function-adapted": {
-      "comments": [],
-      "review_sha256": "f0cc5e95ccdc5186efe490a73c99221e1e20b44b2ff4c07902c76689288d2466",
+      "comments": [
+        {
+          "author": "Daniel C",
+          "id": "8161229a5ffc46afb6ff9f92bd47b3e4",
+          "text": "Why is this here?"
+        },
+        {
+          "author": "Daniel C",
+          "id": "ae04791827274dadb448cc795645751b",
+          "text": "The identity function should be defined and imported by this point."
+        }
+      ],
+      "review_sha256": "f3c91fef5cafa704f758274c8f65c58b225c71bc22f79e52596a19363290553c",
       "state": "rejected"
     },
     "exercise-7-4-natural-value-one-finite": {
