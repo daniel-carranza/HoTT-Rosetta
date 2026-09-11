@@ -9,11 +9,11 @@ from typing import List, Optional
 
 from .agda_manifest import AgdaBlock, load_manifest
 from .editing import apply_edit, preview_edit
-from .generate import candidate_exercise, candidate_section
-from .latex import inventory
 from .agda_typecheck import typecheck_result
 from .missing_agda import discover_missing_agda
 from .layout import rosetta_directory
+from .active_files import active_files
+from .maintained import AGDA_FENCE, block_match
 
 
 AGDA_REVIEW_STATES = (
@@ -76,7 +76,7 @@ def _statement(document: str, block: AgdaBlock) -> str:
     anchor = f"<!-- rosetta-item: {block.item_id}"
     start = document.find(anchor)
     if start < 0:
-        raise ValueError(f"Missing item marker for {block.block_id}")
+        return _exercise_statement(document) or document.split("```agda", 1)[0].strip()
     heading_start = document.rfind("\n## ", 0, start)
     start = heading_start + 1 if heading_start >= 0 else start
     end = document.find("\n## ", start + 1)
@@ -94,7 +94,7 @@ def _generated_block_code(document: str, block: AgdaBlock) -> str:
     marker = f"<!-- rosetta-agda-block: {block.block_id} -->"
     position = document.find(marker)
     if position < 0:
-        return block.code.rstrip("\n")
+        return ""
     match = re.match(r"\s*```agda\s*\n(.*?)^```", document[position + len(marker) :], re.DOTALL | re.MULTILINE)
     if not match:
         raise ValueError(f"Malformed generated Agda block: {block.block_id}")
@@ -182,49 +182,25 @@ def discover_agda_reviews(root: Path) -> List[AgdaReviewRecord]:
     """Build records from generated files, manifest data, and pinned sources."""
 
     blocks = load_manifest(root / "data" / "agda-blocks.json")
-    sections = inventory(root / "book")
     store = load_agda_review_store(root / "data" / "agda-reviews.json")
-    documents = {}
     generated = {}
     typechecks = {}
     records = []
     for block in blocks:
-        match = re.match(r"section-(\d+)-(\d+)-", block.destination)
-        fallback_statement = ""
-        if match:
-            chapter, subsection = map(int, match.groups())
-            key = (chapter, subsection)
-            if key not in documents:
-                _, documents[key] = candidate_section(
-                    sections[chapter - 1], subsection, blocks
-                )
-            fallback_statement = _statement(documents[key], block)
-        else:
-            exercise_match = re.match(r"exercise-(\d+)-(\d+)-", block.destination)
-            if exercise_match:
-                chapter, exercise = map(int, exercise_match.groups())
-                key = (chapter, "exercise", exercise)
-                if key not in documents:
-                    _, documents[key] = candidate_exercise(
-                        root, sections[chapter - 1], exercise, blocks
-                    )
-                fallback_statement = _exercise_statement(documents[key])
-                if not fallback_statement:
-                    fallback_statement = _statement(documents[key], block)
-            else:
-                raise ValueError(
-                    f"Unsupported Agda review destination: {block.destination}"
-                )
         generated_path = rosetta_directory(root) / block.destination
+        if not generated_path.is_file():
+            continue
         if block.destination not in generated:
             generated[block.destination] = generated_path.read_text()
         generated_text = generated[block.destination]
         project_code = _generated_block_code(generated_text, block)
+        if not project_code.strip():
+            continue
         statement = (
             _exercise_statement(generated_text)
             if block.item_id.startswith("exercise-")
             else _statement(generated_text, block)
-        ) or fallback_statement
+        )
         upstream = _source_code(root, block)
         if block.destination not in typechecks:
             typechecks[block.destination] = typecheck_result(root, block.destination)
@@ -233,7 +209,7 @@ def discover_agda_reviews(root: Path) -> List[AgdaReviewRecord]:
             block_id=block.block_id,
             item_id=block.item_id,
             destination=block.destination,
-            provenance_kind=block.provenance_kind,
+            provenance_kind=("adapted" if block.provenance_kind == "exact" and project_code != upstream else block.provenance_kind),
             statement=statement,
             project_code=project_code,
             source_code=upstream,
@@ -245,7 +221,7 @@ def discover_agda_reviews(root: Path) -> List[AgdaReviewRecord]:
             exact_match=project_code == upstream,
             document_sha256=hashlib.sha256(generated_text.encode()).hexdigest(),
             conversion_status=block.conversion_status,
-            conversion_note=block.conversion_note,
+            conversion_note=(block.conversion_note + " Maintained code differs from the stored provenance snapshot." if project_code != block.code.rstrip("\n") else block.conversion_note),
             state="pending",
             comments=[],
             typecheck_status=checked.get("status", "not-checked"),
@@ -253,6 +229,37 @@ def discover_agda_reviews(root: Path) -> List[AgdaReviewRecord]:
             typecheck_candidate=checked.get("candidate", ""),
         )
         records.append(_with_stored_review(record, store))
+    # Direct contributions need no manifest entry to appear in the review UI.
+    recorded = {(record.destination, record.block_id) for record in records}
+    for path in active_files(root):
+        document = path.read_text()
+        known_spans = set()
+        for destination, block_id in recorded:
+            if destination == path.name:
+                known_spans.add(block_match(document, block_id).start())
+        for index, fence in enumerate(AGDA_FENCE.finditer(document)):
+            if fence.start() in known_spans:
+                continue
+            code = fence.group(2).rstrip("\n")
+            substantive = [line for line in code.splitlines() if line.strip() and not re.match(r"\s*(?:module |open import |import |--|\{-#)", line)]
+            if not substantive:
+                continue
+            block_id = f"unrecorded-{path.stem}-{index}"
+            if path.name not in typechecks:
+                typechecks[path.name] = typecheck_result(root, path.name)
+            checked = typechecks[path.name]
+            record = AgdaReviewRecord(
+                block_id=block_id, item_id=f"{path.name}: Agda block {index + 1}",
+                destination=path.name, provenance_kind="unrecorded",
+                statement=_exercise_statement(document) or document[:fence.start()].rsplit("\n## ", 1)[-1].strip(),
+                project_code=code, source_code="", source_location="No provenance recorded for this maintained block.",
+                source_commit="", exact_match=False,
+                document_sha256=hashlib.sha256(document.encode()).hexdigest(),
+                conversion_status="maintained", conversion_note="", state="pending", comments=[],
+                typecheck_status=checked.get("status", "not-checked"),
+                typecheck_message=checked.get("message", ""),
+            )
+            records.append(_with_stored_review(record, store))
     for item in discover_missing_agda(root):
         generated_text = (rosetta_directory(root) / item.destination).read_text()
         record = AgdaReviewRecord(

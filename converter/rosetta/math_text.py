@@ -280,7 +280,7 @@ SIMPLE_COMMANDS = {
 def _word_like_book_macros() -> dict:
     """Read simple mathsf names from hott.tex without evaluating TeX."""
 
-    source = Path(__file__).resolve().parents[2] / "book" / "hott.tex"
+    source = Path(__file__).resolve().parents[2] / "latex-book" / "hott.tex"
     if not source.is_file():
         return {}
     commands = {}

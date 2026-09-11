@@ -19,7 +19,7 @@ class LatexStructureTests(unittest.TestCase):
         self.assertEqual(lines, [(1, r"kept \% sign ")])
 
     def test_book_input_order(self):
-        paths = book_section_paths(ROOT / "book")
+        paths = book_section_paths(ROOT / "latex-book")
         self.assertEqual(len(paths), 22)
         self.assertEqual(paths[0].name, "dtt.tex")
         self.assertEqual(paths[8].name, "equivalences.tex")
@@ -50,7 +50,7 @@ class LatexStructureTests(unittest.TestCase):
         )
 
     def test_nested_book_title_is_not_truncated(self):
-        sections = inventory(ROOT / "book")
+        sections = inventory(ROOT / "latex-book")
         self.assertEqual(
             sections[4].subsections[5],
             r"The laws of addition on \texorpdfstring{$\N$}{ℕ}",

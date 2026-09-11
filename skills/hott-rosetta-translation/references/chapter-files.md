@@ -1,9 +1,10 @@
 # Chapter files
 
-A chapter file corresponds to a globally numbered LaTeX `\section`. It contains
-the introductory prose before the first `\subsection`, followed by generated
-imports for every registered section and exercise in numerical order.
+A chapter file corresponds to a numbered LaTeX section. It contains the chapter
+introduction and imports its section and exercise modules in numerical order.
 
-Chapter files aggregate generated modules; do not maintain their import lists
-by hand. When a section, exercise, filename, or dependency changes, regenerate
-the chapter and typecheck the aggregate if Agda is involved.
+Generation creates only a missing chapter file. Existing chapter introductions
+and imports are maintained directly. When filenames or the section/exercise
+inventory change, edit the affected imports narrowly and typecheck the aggregate.
+Never regenerate the chapter to update its import list, and never infer section
+completeness from a successful aggregate check.

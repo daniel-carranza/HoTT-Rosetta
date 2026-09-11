@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from rosetta.agda_manifest import load_manifest
+from rosetta.layout import rosetta_directory
 
 from rosetta.agda_review import (
     AgdaReviewRecord,
@@ -50,21 +51,16 @@ class AgdaReviewTests(unittest.TestCase):
     def test_repository_manifest_blocks_are_reviewable(self):
         root = Path(__file__).resolve().parent.parent
         records = discover_agda_reviews(root)
-        curated = [record for record in records if record.provenance_kind != "missing"]
+        curated = [record for record in records if record.provenance_kind not in {"missing", "unrecorded"}]
         missing = [record for record in records if record.provenance_kind == "missing"]
         blocks = load_manifest(root / "data" / "agda-blocks.json")
         self.assertCountEqual(
             [record.block_id for record in curated],
-            [block.block_id for block in blocks],
+            [block.block_id for block in blocks if block.conversion_status == "ready"
+             and f"<!-- rosetta-agda-block: {block.block_id} -->" in (rosetta_directory(root) / block.destination).read_text()],
         )
-        self.assertEqual(
-            sum(record.exact_match for record in curated),
-            sum(block.provenance_kind == "exact" for block in blocks),
-        )
-        self.assertEqual(
-            Counter(record.provenance_kind for record in curated),
-            Counter(block.provenance_kind for block in blocks),
-        )
+        self.assertTrue(any(record.provenance_kind == "unrecorded" for record in records))
+        self.assertTrue(all(record.project_code == record.source_code for record in curated if record.exact_match))
         self.assertTrue(missing)
         self.assertTrue(all(not record.project_code for record in missing))
         self.assertTrue(all(record.typecheck_status == "not-applicable" for record in missing))
@@ -75,10 +71,7 @@ class AgdaReviewTests(unittest.TestCase):
             if comment.author == "Daniel C"
         ]
         self.assertGreaterEqual(len(daniel_comments), 11)
-        self.assertEqual(
-            Counter(record.conversion_status for record in curated),
-            Counter(block.conversion_status for block in blocks),
-        )
+        self.assertTrue(all(record.conversion_status == "ready" for record in curated))
         self.assertTrue(all(record.statement for record in records))
         self.assertTrue(all(record.document_sha256 for record in records))
 
@@ -304,7 +297,7 @@ answer : Type
             }
         )
         detail = render_record(passed)
-        self.assertIn("Agda accepted the complete candidate file.", detail)
+        self.assertIn("Agda accepted the complete maintained file.", detail)
         self.assertNotIn("Checking imported-module", detail)
 
         failed = AgdaReviewRecord(

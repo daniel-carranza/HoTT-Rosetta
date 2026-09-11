@@ -1,50 +1,49 @@
-# Review UI
+# Review program
 
-Run `python3 rosetta.py review --web`, open the printed local address, and stop
-the server with `Ctrl-C`. The loading page remains visible while review data is
-indexed. Review is optional and never gates conversion or ordinary checks.
+Run python3 rosetta.py review --web in the development fork, open the printed
+local address, and stop with Ctrl-C. Startup and browsing read the existing
+Rosetta. There is no conversion prerequisite and existing files are never
+regenerated. A sandbox must allow local server connections for browser use.
 
-Each Agda page shows the book statement, Rosetta code, recorded agda-unimath
-source and provenance, typecheck state, comments, and a collapsible highlighted
-diff. Reviewers may approve, mark a block as needing further review, reject,
-clear a decision back to pending, or comment. Here, pending means that no
-decision has been recorded; needing further review means that the block was
-inspected but is not ready for approval or rejection. Changed content makes an
-earlier decision display as stale. Records are stored in
-`data/agda-reviews.json`.
+The loading page stays visible while files are indexed. The file reader shows
+current maintained prose and Agda. External edits refresh the index. The review
+table supports status filters, sorting, text search, and comment filters.
 
-The home page supports several client-side ways to find work without changing
-the stored review data:
+Each curated block shows the maintained code, recorded source, provenance,
+typecheck evidence, and reviewer comments. Directly added blocks without
+provenance records also appear, labeled unrecorded; they can be reviewed and
+their containing file can be checked. Edit these blocks directly until their
+provenance is recorded. A deleted or absent block is never replaced on screen
+with stale manifest code.
 
-- Select a status total to show only records in that state. Select the active
-  total again to show all states.
-- Select any column heading to sort ascending, select it again for descending,
-  and select it a third time to restore default order.
-- Search across visible row text or restrict the table to records with
-  comments. These controls combine with status filtering and sorting.
-- Use **Reset table view** to clear the status filter, search, comments-only
-  filter, and sorting together. The text above the table reports the active
-  view and visible record count.
+Run Agda check checks the actual maintained file and its local imports. A passing
+result becomes outdated when the file or any transitive local dependency changes.
+Agda's ordinary interface caches are ignored by Git. A pass only establishes
+acceptance of the code that exists, not mathematical coverage.
 
-Relocating a block or changing generated item boundaries can refresh its
-`review_sha256` and make a prior decision stale even when the Agda text is
-unchanged. Preserve existing reviewer comments and inspect diffs before
-committing review metadata; never replace the file wholesale after
-regeneration.
+## Curated block edits
 
-Use **Open scratchpad editor** to edit an existing block temporarily. Save the
-draft, typecheck the overlaid destination, and preview promotion. Only the exact
-passing draft can be promoted. Confirmation creates a backup, updates the
-appropriate `data/agda-blocks*.json`, regenerates the destination, and clears
-the draft. Adapted code requires a concise note.
+Open the scratchpad editor to draft a change to a curated block. The draft
+overlays only that block on the current maintained document. Its temporary
+typecheck file is discarded after checking; there is no preview Rosetta tree.
 
-Missing-code pages accept comments but cannot receive a review decision, be
-edited, or be typechecked. Current policy forbids adding handwritten
-replacement blocks.
+Only the exact passing draft can be promoted. Preview shows both the focused
+file diff and provenance update. Confirmation detects intervening changes to
+the file, manifest, or dependencies, keeps recoverable backups, and patches
+only the selected fence. Imports, other Agda blocks, prose, and manual changes
+elsewhere remain intact. If they need edits, make those changes directly and
+check the resulting file. A stale draft must be discarded and recreated.
 
-Training exercises show an empty Agda block and their recorded invisible
-mathematics. Their solutions live on `proposal/agda-exercise-solutions`, not on
-`main`.
+Review backups live under .rosetta-backups/. Scratchpad state and check evidence
+live under _build/rosetta-review/. These are ignored development artifacts.
+The review metadata in data/agda-reviews.json preserves comments and decisions.
+Changed evidence makes earlier decisions stale; nothing is silently reapproved.
 
-The file reader displays active generated files read-only. Durable changes
-belong in converter code or curated data followed by regeneration.
+Review decisions are optional. Pending means no decision, needs-further-review
+means inspected but undecided, and approved/rejected record explicit decisions.
+Missing-code items are comment-only. Ordinary conversion and checks do not
+depend on these decisions or on loading the review metadata.
+
+The former proposal-only auxiliary holes are retired. Accepted solutions belong
+in the shared Rosetta. BENCHMARK.md separately lists intentional public benchmark
+exercises; it is not an instruction to remove accepted auxiliary mathematics.

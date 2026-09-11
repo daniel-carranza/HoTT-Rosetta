@@ -4,6 +4,8 @@ import re
 import unicodedata
 import shutil
 import subprocess
+import tempfile
+from contextlib import nullcontext
 from pathlib import Path
 
 from .latex import SectionSource, exercise_bodies, section_introduction
@@ -14,18 +16,8 @@ from .layout import rosetta_directory
 
 
 def agda_typecheck_options(agda: str) -> list[str]:
-    """Return portable Agda options, suppressing interfaces when supported."""
-
-    help_process = subprocess.run(
-        [agda, "--help"],
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    options = ["--no-libraries"]
-    if "--no-write-interfaces" in help_process.stdout + help_process.stderr:
-        options.append("--no-write-interfaces")
-    return options
+    """Use local imports and Agda's normal, Git-ignored interface caches."""
+    return ["--no-libraries"]
 
 
 def slugify(title: str) -> str:
@@ -177,9 +169,13 @@ def clean_document(document: str) -> str:
 
 
 def write_candidate(root: Path, filename: str, document: str) -> Path:
+    """Create a missing file, refusing to replace any existing path."""
+    if Path(filename).name != filename:
+        raise ValueError("Expected a filename inside the Rosetta directory")
     destination = rosetta_directory(root) / filename
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(document)
+    with destination.open("x", encoding="utf-8") as handle:
+        handle.write(document)
     return destination
 
 
@@ -193,7 +189,10 @@ def write_support_files(root: Path) -> list[Path]:
         if not source.is_file():
             continue
         target = destination / source.name
-        target.write_text(source.read_text())
+        try:
+            write_candidate(root, source.name, source.read_text())
+        except FileExistsError:
+            continue
         written.append(target)
     return written
 
@@ -204,32 +203,24 @@ def typecheck_candidate(root: Path, filename: str, document: str):
     agda = shutil.which("agda")
     if agda is None:
         raise RuntimeError("Agda is not installed or not on PATH")
-    original_module = filename.removesuffix(".lagda.md")
-    candidate_module = "candidate-" + original_module
-    staged = root / "_build" / "rosetta-typecheck" / (
-        candidate_module + ".lagda.md"
-    )
-    staged.parent.mkdir(parents=True, exist_ok=True)
-    staged.write_text(
-        document.replace(
-            f"module {original_module} where",
-            f"module {candidate_module} where",
-            1,
+    active = rosetta_directory(root) / filename
+    is_active = active.is_file() and active.read_text() == document
+    build = root / "_build" / "rosetta-typecheck"
+    build.mkdir(parents=True, exist_ok=True)
+    context = nullcontext(None) if is_active else tempfile.TemporaryDirectory(dir=build)
+    with context as temporary:
+        staged = active
+        if temporary:
+            original_module = filename.removesuffix(".lagda.md")
+            candidate_module = "candidate-" + original_module
+            staged = Path(temporary) / (candidate_module + ".lagda.md")
+            declaration = f"module {original_module} where"
+            if declaration not in document:
+                raise ValueError("The draft must retain its module declaration")
+            staged.write_text(document.replace(declaration, f"module {candidate_module} where", 1))
+        process = subprocess.run(
+            [agda, *agda_typecheck_options(agda), "-i", str(staged.parent),
+             "-i", str(rosetta_directory(root)), str(staged)],
+            cwd=root, text=True, capture_output=True, check=False,
         )
-    )
-    process = subprocess.run(
-        [
-            agda,
-            *agda_typecheck_options(agda),
-            "-i",
-            str(staged.parent),
-            "-i",
-            str(rosetta_directory(root)),
-            str(staged),
-        ],
-        cwd=root,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    return process.returncode, process.stdout + process.stderr, staged
+        return process.returncode, process.stdout + process.stderr, staged

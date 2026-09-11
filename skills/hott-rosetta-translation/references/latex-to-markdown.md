@@ -2,6 +2,8 @@
 
 Preserve content and expose unsupported input rather than silently dropping it.
 Implement recurring rules in the converter with regression tests.
+These rules apply when creating missing files. Repair existing documents with
+focused edits preserving collaborator work; never regenerate them.
 
 - Remove indexing commands and retain stable label information in item markers.
 - Render emphasis and definitions as Markdown emphasis/bold.
@@ -17,4 +19,4 @@ Implement recurring rules in the converter with regression tests.
 - Keep unknown macros and unsupported environments visible as diagnostics.
 
 Use the explicit project notation tables and macro definitions in
-`book/hott.tex` as evidence. Do not execute arbitrary TeX definitions.
+`latex-book/hott.tex` as evidence. Do not execute arbitrary TeX definitions.

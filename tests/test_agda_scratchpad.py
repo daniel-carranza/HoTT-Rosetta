@@ -18,6 +18,17 @@ class AgdaScratchpadTests(unittest.TestCase):
     def _root(self, directory: str) -> tuple[Path, Path]:
         root = Path(directory)
         (root / "data").mkdir()
+        (root / "data" / "project-layout.json").write_text(json.dumps({
+            "format_version": 1, "rosetta_directory": "product",
+        }))
+        (root / "product").mkdir()
+        (root / "product" / "section-1-1-example.lagda.md").write_text(
+            "# Collaborator prose\n\n"
+            "```agda\nmodule section-1-1-example where\n```\n\n"
+            "<!-- rosetta-agda-block: example-block -->\n\n"
+            "```agda\noriginal : Set\noriginal = Set\n```\n\n"
+            "Manually improved ending.\n"
+        )
         source = root / "external" / "agda-unimath" / "src" / "example.lagda.md"
         source.parent.mkdir(parents=True)
         source.write_text("original : Set\noriginal = Set\n")

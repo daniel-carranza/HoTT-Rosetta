@@ -1,53 +1,43 @@
 # HoTT Rosetta agent instructions
 
-Before changing the repository, read:
+Before changing the repository, read docs/implementation-handoff.md,
+docs/conversion-contract.md, skills/hott-rosetta-translation/SKILL.md, and
+its task-specific references. Consult docs/agda-training-exercises.md and
+docs/invisible-math.md for historical dependency and provenance evidence.
 
-1. `docs/implementation-handoff.md`
-2. `docs/conversion-contract.md`
-3. `skills/hott-rosetta-translation/SKILL.md`
-4. The task references selected by that skill
-5. `docs/agda-training-exercises.md`
-6. `docs/invisible-math.md`
+## Current policy
 
-`docs/initial-prompt.txt` and `docs/audit-baseline.md` are historical evidence,
-not current instructions.
-
-## Requirements
-
-- Complete section prose and section Agda for Chapters 3--22 before filling
-  remaining exercise Agda. Add exercise Agda earlier only when a section needs
-  it. Chapters 1--2 are optional.
-- File presence and review state never establish completeness. The optional
-  review UI must not control conversion or ordinary checks.
-- Obtain the active output path from `data/project-layout.json`; never hard-code
-  it.
-- Never use `archive/legacy-rosetta/` in active code, tests, comparisons,
+- The maintained Rosetta files are authoritative project content. Preserve
+  collaborator edits, including uncommitted work. Generation creates only
+  missing files; never regenerate existing files or create a parallel preview
+  Rosetta. Apply focused changes directly to existing files.
+- Keep one shared Rosetta across the development fork, its release branch,
+  and the public repository. Inspect and propagate accepted content changes.
+  Keep public content to the configured Rosetta directory, latex-book/,
+  README.md, and BENCHMARK.md. Everything else is development-only.
+- Read the active Rosetta path from data/project-layout.json.
+- Never use archive/legacy-rosetta/ in active code, tests, comparisons,
   imports, or Agda include paths.
-- Never invent Agda. Copy exact or analogous pinned agda-unimath code, make
-  only necessary local adaptations, and record commit/file/line/hash
-  provenance. If no applicable source exists, report the gap.
-- Do not enlarge an earlier complete file solely to support a later one. If a
-  later Agda block needs an absent auxiliary result, leave that later block
-  empty. Record the exercise in `docs/agda-training-exercises.md`. In
-  `docs/invisible-math.md`, record the needed agda-unimath results and their
-  natural mathematical home.
-- Use one shared branch, `proposal/agda-exercise-solutions`, for every training
-  exercise. Create and publish it from current `main` when the first exercise
-  appears. Before each solution, bring in the latest `main`. Add one focused
-  solution commit, validate it, push it, and record its commit in the exercise
-  index. Never merge the proposal automatically or rewrite its public history.
-- These branch steps bind agents only. Humans may edit either branch freely.
-  Agents must inspect and preserve human changes.
-- Routine checks do not run Agda on a file that contains or imports a recorded
-  training exercise. They report `deferred`, never `passed`. Use `--force` only
-  to see Agda's unchanged result. The proposal branch must pass ordinary Agda
-  checks for every exercise and affected later file.
-- Generated modules must use repository-local imports, never imports from
-  `external/agda-unimath`.
-- Preserve unrelated and in-progress work. Agents may create focused commits
-  using standard Git practices: inspect the worktree, stage only intended
-  changes, and use clear commit messages. Do not reset, clean, overwrite, or
-  include unrelated changes in a commit.
+- Prioritize section prose and Agda for Chapters 3--22 before remaining
+  exercise Agda, adding exercise results when needed by sections.
+  Chapters 1--2 are optional. Preserve already accepted human contributions.
+- Never invent Agda. Copy exact or analogous pinned agda-unimath code,
+  make only necessary local adaptations, and record commit/file/line/hash
+  provenance. Report actual gaps when no source applies.
+- Add needed auxiliary results where they naturally belong, including earlier
+  complete files. Maintain narrative and dependency order. Do not create
+  artificial holes or separate proposal solutions for these dependencies.
+- Use repository-local Agda imports, never external/agda-unimath imports.
+- File presence, typechecking, and review state do not establish completeness.
+  Review is optional and must not control ordinary checks or generation.
+- Typecheck maintained files. A deferred result is not a pass.
+- Preserve public history and all human changes. Inspect the worktree, stage
+  only intended files, and use focused commits. Never reset, clean, force-push,
+  or overwrite collaborator work.
+- Respect remote permissions. If one or two simple attempts do not resolve a
+  permission issue, stop workarounds, explain the intended action and required
+  permission, and ask the user. Fork access does not imply access to publish
+  into EgbertRijke/HoTT-Rosetta.
 
 ## Validation
 
@@ -57,6 +47,10 @@ python3 rosetta.py check
 git diff --check
 ```
 
-Also run `python3 rosetta.py typecheck-candidate N M` for every changed section
-containing Agda. A deferred result is not a successful typecheck. Typecheck
-exercises only when their Agda changes.
+Run python3 rosetta.py typecheck-candidate N M for every changed section
+containing Agda, typecheck-exercise-candidate N K for changed exercise Agda,
+and typecheck-all for affected aggregate chapters. These commands check
+maintained files, despite the historical candidate names.
+
+Historical documents and explicitly historical sections are evidence, not
+current instructions. The maintenance contract is the current policy authority.

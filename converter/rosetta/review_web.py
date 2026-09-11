@@ -260,10 +260,10 @@ def render_file_index(paths: list[Path]) -> str:
         for path in paths
     )
     return _layout(
-        "Generated Rosetta files",
+        "Maintained Rosetta files",
         "<p><a href='/'>← Review home</a></p>"
-        + "<p>These are the active generated Rosetta files. They combine the "
-        "converted book text with curated Agda blocks and are read-only here.</p>"
+        + "<p>These are the active maintained Rosetta files. They combine the "
+        "maintained book text and Agda blocks and are read-only here.</p>"
         +
         "<p><label>Find a file: <input id='file-search' type='search'></label></p>"
         "<ul>" + rows + "</ul>"
@@ -332,7 +332,7 @@ def render_file_reader(
     preview = markdown_to_safe_html("".join(lines))
     return _layout(
         name,
-        "<nav class='controls'><a href='/read'>← All generated files</a></nav>"
+        "<nav class='controls'><a href='/read'>← All maintained files</a></nav>"
         f"<article class='reader-preview'>{preview}</article>",
     )
 
@@ -340,7 +340,7 @@ def render_file_reader(
 def render_missing_agda(items: list[MissingAgdaItem]) -> str:
     rows = []
     previews = markdown_fragments_to_safe_html(
-        [item.statement or "Statement unavailable in generated file." for item in items]
+        [item.statement or "Statement unavailable in maintained file." for item in items]
     )
     for item, preview in zip(items, previews):
         rows.append(
@@ -357,7 +357,7 @@ def render_missing_agda(items: list[MissingAgdaItem]) -> str:
         "Mathematical items missing Agda",
         "<p><a href='/'>← Review home</a></p>"
         "<p>These numbered definitions, results, remarks, and similar items occur in "
-        "generated files but have no associated substantive Agda block. Expand an "
+        "maintained files but have no associated substantive Agda block. Expand an "
         "item to read its statement and proof, or open its complete file.</p>"
         f"<p><strong>{len(items)} items</strong></p>"
         "<p><label>Find a missing item: <input id='missing-search' type='search' "
@@ -433,6 +433,8 @@ def render_record(
         "This is an exact copy of the recorded source."
         if record.exact_match
         else (
+            "This maintained block has no recorded provenance. Edit it directly; no upstream source is claimed."
+            if record.provenance_kind == "unrecorded" else
             "This is handwritten project code. No upstream source is claimed."
             if record.provenance_kind == "handwritten"
             else "This block is adapted. Compare the differences before approving it."
@@ -447,7 +449,7 @@ def render_record(
     draft_status = scratchpad.status if scratchpad else "not-saved"
     if record.typecheck_status == "passed":
         check_message = (
-            "<p class='passed-message'>Agda accepted the complete candidate file.</p>"
+            "<p class='passed-message'>Agda accepted the complete maintained file.</p>"
         )
     elif record.typecheck_status == "deferred":
         check_message = (
@@ -476,14 +478,14 @@ def render_record(
             if is_training else ""
         )
         +
-        f"<p><a href='/read/{quote(record.destination)}'>Read the generated file</a></p>"
+        f"<p><a href='/read/{quote(record.destination)}'>Read the maintained file</a></p>"
         + (
             "<section class='panel warning'><h3>Agda code missing</h3>"
             "<p>This item has no candidate Agda block. Use the shared comments to "
             "record helpful search results or relevant upstream material.</p></section>"
             if is_missing else
             f"<section class='panel'><h3>Agda check</h3>"
-            f"<p>This checks the complete candidate file containing this block.</p>{check_message}"
+            f"<p>This checks the complete maintained file containing this block.</p>{check_message}"
             + (
                 "<p>To see Agda's raw result, run the corresponding candidate "
                 "check with <code>--force</code>.</p>"
@@ -507,7 +509,7 @@ def render_record(
         + "</div>"
         f"<nav class='controls lower-navigation'>{navigation_html}</nav>"
         + (
-            "" if is_missing else
+            "" if is_missing or record.provenance_kind == "unrecorded" else
             f"<section class='panel'><h3>Edit Agda code</h3>"
             f"<p><span class='badge {html.escape(draft_status)}'>Scratchpad: "
             f"{html.escape(draft_status)}</span></p>"
@@ -538,7 +540,7 @@ def render_record(
 
 
 def render_agda_editor(record: AgdaReviewRecord, token: str, scratchpad=None) -> str:
-    if record.provenance_kind == "missing" or record.conversion_status == "exercise":
+    if record.provenance_kind in {"missing", "unrecorded"} or record.conversion_status == "exercise":
         raise ValueError("There is no candidate Agda block to edit")
     draft_code = scratchpad.code if scratchpad else record.project_code
     draft_note = scratchpad.adaptation_note if scratchpad else ""
@@ -567,11 +569,12 @@ def render_agda_editor(record: AgdaReviewRecord, token: str, scratchpad=None) ->
         f"<p><a href='/agda/{block}'>← Return to review</a></p>"
         "<section class='panel'><h2>Agda scratchpad</h2>"
         "<p>Save and typecheck a temporary draft without changing the curated "
-        "manifest or generated Rosetta. Only a passing draft can be promoted.</p>"
+        "manifest or maintained Rosetta. Only a passing draft can be promoted.</p>"
         f"<p><span class='badge {html.escape(draft_status)}'>Scratchpad: "
         f"{html.escape(draft_status)}</span></p>{draft_message}"
         f"<form method='post' action='/agda/{block}/scratch-save'>"
         f"<input type='hidden' name='token' value='{html.escape(token)}'>"
+        f"<input type='hidden' name='document_digest' value='{html.escape(record.document_sha256)}'>"
         f"<textarea name='code' required>{html.escape(draft_code)}</textarea>"
         "<p><label>Adaptation/source note<br>"
         "<input name='adaptation_note' size='100' "
@@ -596,8 +599,8 @@ def render_agda_edit_preview(
         f"<p><a href='/agda/{quote(record.block_id)}/edit'>← Cancel and return to editor</a></p>"
         "<section class='panel warning'><h2>Confirm curated Agda edit</h2>"
         f"<p>The saved block will have <strong>{html.escape(provenance_kind)}</strong> provenance. "
-        "Confirming creates a backup, atomically updates the manifest, regenerates "
-        "the active document, and makes prior review evidence stale.</p>"
+        "Confirming backs up and patches only this code block, updates its provenance, "
+        "and makes prior review evidence stale. Other file content is preserved.</p>"
         f"<pre>{html.escape(manifest_diff) if manifest_diff else 'No changes.'}</pre>"
         f"<form method='post' action='/agda/{quote(record.block_id)}/edit-confirm'>"
         f"<input type='hidden' name='token' value='{html.escape(token)}'>"
@@ -776,8 +779,8 @@ def make_handler(root: Path, token: str = ""):
                     note = form.get("adaptation_note", [""])[0]
                     edit = preview_agda_block_edit(root, block_id, code, note)
                     self._send(200, render_agda_edit_preview(
-                        matches[0], code, note, edit.preview.diff,
-                        edit.preview.original_digest, edit.provenance_kind, token,
+                        matches[0], code, note, edit.document_preview.diff + edit.preview.diff,
+                        edit.evidence_digest, edit.provenance_kind, token,
                     ))
                     return
                 if path.startswith("/agda/") and path.endswith("/edit-confirm"):
@@ -804,9 +807,12 @@ def make_handler(root: Path, token: str = ""):
                     block_id = unquote(
                         path.removeprefix("/agda/").removesuffix("/scratch-save")
                     )
+                    if not form.get("document_digest", [""])[0]:
+                        raise ValueError("Reload the editor before saving a draft")
                     save_scratchpad(
                         root, block_id, form.get("code", [""])[0],
                         form.get("adaptation_note", [""])[0],
+                        expected_document_digest=form.get("document_digest", [""])[0],
                     )
                     self._redirect("/agda/" + quote(block_id) + "/edit")
                     return
@@ -830,8 +836,8 @@ def make_handler(root: Path, token: str = ""):
                         root, block_id, draft.code, draft.adaptation_note
                     )
                     self._send(200, render_agda_edit_preview(
-                        matches[0], draft.code, draft.adaptation_note, edit.preview.diff,
-                        edit.preview.original_digest, edit.provenance_kind, token,
+                        matches[0], draft.code, draft.adaptation_note, edit.document_preview.diff + edit.preview.diff,
+                        edit.evidence_digest, edit.provenance_kind, token,
                     ))
                     return
                 if path.startswith("/agda/") and path.endswith("/scratch-discard"):

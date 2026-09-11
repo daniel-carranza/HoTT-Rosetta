@@ -1,22 +1,14 @@
-"""Safe discovery of active generated Rosetta files."""
+"""Safe discovery of maintained Rosetta files, including direct contributions."""
 
 from pathlib import Path
 from typing import List
 
 from .layout import rosetta_directory
-from .file_registry import load_file_registry
 
 
 def active_files(root: Path) -> List[Path]:
     directory = rosetta_directory(root)
-    return sorted(
-        (
-            directory / name
-            for name in set(load_file_registry(root).values())
-            if (directory / name).is_file()
-        ),
-        key=lambda path: path.name,
-    )
+    return sorted(path for path in directory.glob("*.lagda.md") if path.is_file())
 
 
 def active_file(root: Path, name: str) -> Path:

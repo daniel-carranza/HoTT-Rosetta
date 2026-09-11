@@ -36,6 +36,7 @@ from .agda_review import discover_agda_reviews
 from .review_web import serve_review
 from .missing_agda import load_agda_coverage
 from .agda_typecheck import (
+    candidate_for_destination,
     deferred_exercises,
     deferred_message,
     prepare_candidate_dependencies,
@@ -46,7 +47,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def command_inventory(as_json: bool) -> int:
-    sections = inventory(ROOT / "book")
+    sections = inventory(ROOT / "latex-book")
     records = [
         {
             "number": item.number,
@@ -70,7 +71,7 @@ def command_inventory(as_json: bool) -> int:
 
 
 def command_prototype(section: int, subsection: int) -> int:
-    sections = inventory(ROOT / "book")
+    sections = inventory(ROOT / "latex-book")
     if section < 1 or section > len(sections):
         print(f"Section must be between 1 and {len(sections)}.", file=sys.stderr)
         return 2
@@ -163,7 +164,7 @@ def command_audit(first: int, last: int, as_json: bool) -> int:
 
 
 def command_compare(section: int, subsection: int, as_json: bool) -> int:
-    sections = inventory(ROOT / "book")
+    sections = inventory(ROOT / "latex-book")
     if section < 1 or section > len(sections):
         print(f"Chapter must be between 1 and {len(sections)}.", file=sys.stderr)
         return 2
@@ -204,7 +205,7 @@ def command_compare(section: int, subsection: int, as_json: bool) -> int:
 
 
 def command_compare_range(first: int, last: int, as_json: bool) -> int:
-    sections = inventory(ROOT / "book")
+    sections = inventory(ROOT / "latex-book")
     if first < 1 or last > len(sections) or first > last:
         print(f"Chapter range must lie between 1 and {len(sections)}.", file=sys.stderr)
         return 2
@@ -262,11 +263,15 @@ def command_compare_range(first: int, last: int, as_json: bool) -> int:
 
 
 def command_candidate(section: int, subsection: int) -> int:
-    sections = inventory(ROOT / "book")
+    sections = inventory(ROOT / "latex-book")
     if section < 1 or section > len(sections):
         print(f"Chapter must be between 1 and {len(sections)}.", file=sys.stderr)
         return 2
     try:
+        existing = rosetta_directory(ROOT) / registered_filename(ROOT, "section", section, subsection)
+        if existing.exists():
+            print(f"Preserved existing file: {existing.relative_to(ROOT)}")
+            return 0
         write_support_files(ROOT)
         blocks = load_manifest(ROOT / "data" / "agda-blocks.json")
         filename, document = candidate_section(
@@ -298,8 +303,12 @@ def command_candidate(section: int, subsection: int) -> int:
 
 
 def command_candidate_exercise(section: int, exercise: int) -> int:
-    sections = inventory(ROOT / "book")
+    sections = inventory(ROOT / "latex-book")
     try:
+        existing = rosetta_directory(ROOT) / registered_filename(ROOT, "exercise", section, exercise)
+        if existing.exists():
+            print(f"Preserved existing file: {existing.relative_to(ROOT)}")
+            return 0
         write_support_files(ROOT)
         blocks = load_manifest(ROOT / "data" / "agda-blocks.json")
         filename, document = candidate_exercise(
@@ -315,8 +324,12 @@ def command_candidate_exercise(section: int, exercise: int) -> int:
 
 
 def command_candidate_chapter(section: int) -> int:
-    sections = inventory(ROOT / "book")
+    sections = inventory(ROOT / "latex-book")
     try:
+        existing = rosetta_directory(ROOT) / registered_filename(ROOT, "chapter", section)
+        if existing.exists():
+            print(f"Preserved existing file: {existing.relative_to(ROOT)}")
+            return 0
         write_support_files(ROOT)
         filename, document = candidate_chapter(ROOT, sections[section - 1])
         destination = write_candidate(ROOT, filename, document)
@@ -329,8 +342,8 @@ def command_candidate_chapter(section: int) -> int:
 
 
 def command_convert(first: int, last: int) -> int:
-    """Generate a complete active Rosetta tree."""
-    sections = inventory(ROOT / "book")
+    """Create missing Rosetta files; never render or replace existing files."""
+    sections = inventory(ROOT / "latex-book")
     if first < 1 or last > len(sections) or first > last:
         print(f"Chapter range must lie between 1 and {len(sections)}.", file=sys.stderr)
         return 2
@@ -340,13 +353,21 @@ def command_convert(first: int, last: int) -> int:
         write_support_files(ROOT)
         for section in sections[first - 1:last]:
             for subsection in range(1, len(section.subsections) + 1):
+                name = registered_filename(ROOT, "section", section.number, subsection)
+                if (rosetta_directory(ROOT) / name).exists():
+                    continue
                 filename, document = candidate_section(section, subsection, blocks)
                 write_candidate(ROOT, filename, document)
                 written += 1
             for exercise in range(1, section.exercise_count + 1):
+                name = registered_filename(ROOT, "exercise", section.number, exercise)
+                if (rosetta_directory(ROOT) / name).exists():
+                    continue
                 filename, document = candidate_exercise(ROOT, section, exercise, blocks)
                 write_candidate(ROOT, filename, document)
                 written += 1
+            if (rosetta_directory(ROOT) / registered_filename(ROOT, "chapter", section.number)).exists():
+                continue
             filename, document = candidate_chapter(ROOT, section)
             write_candidate(ROOT, filename, document)
             written += 1
@@ -354,7 +375,7 @@ def command_convert(first: int, last: int) -> int:
         print(str(error), file=sys.stderr)
         return 2
     print(
-        f"Generated {written} candidates under "
+        f"Created {written} missing files; preserved existing files under "
         f"{rosetta_directory(ROOT).relative_to(ROOT)}/."
     )
     return 0
@@ -367,14 +388,14 @@ def _report_deferred(label: str, pending) -> None:
 
 
 def command_typecheck_candidate(section: int, subsection: int, force: bool = False) -> int:
-    sections = inventory(ROOT / "book")
+    sections = inventory(ROOT / "latex-book")
     if section < 1 or section > len(sections):
         print(f"Chapter must be between 1 and {len(sections)}.", file=sys.stderr)
         return 2
     try:
         blocks = load_manifest(ROOT / "data" / "agda-blocks.json")
-        filename, document = candidate_section(
-            sections[section - 1], subsection, blocks
+        filename, document = candidate_for_destination(
+            ROOT, registered_filename(ROOT, "section", section, subsection)
         )
         document, _ = prepare_candidate_dependencies(ROOT, document, blocks)
         pending = deferred_exercises(blocks, filename, document)
@@ -399,14 +420,14 @@ def command_typecheck_candidate(section: int, subsection: int, force: bool = Fal
 def command_typecheck_exercise_candidate(
     section: int, exercise: int, force: bool = False
 ) -> int:
-    sections = inventory(ROOT / "book")
+    sections = inventory(ROOT / "latex-book")
     if section < 1 or section > len(sections):
         print(f"Chapter must be between 1 and {len(sections)}.", file=sys.stderr)
         return 2
     try:
         blocks = load_manifest(ROOT / "data" / "agda-blocks.json")
-        filename, document = candidate_exercise(
-            ROOT, sections[section - 1], exercise, blocks
+        filename, document = candidate_for_destination(
+            ROOT, registered_filename(ROOT, "exercise", section, exercise)
         )
         document, _ = prepare_candidate_dependencies(ROOT, document, blocks)
         pending = deferred_exercises(blocks, filename, document)
@@ -429,7 +450,7 @@ def command_typecheck_exercise_candidate(
 def command_typecheck_all(first: int, last: int, force: bool = False) -> int:
     """Typecheck aggregate generated chapters from the configured product."""
 
-    sections = inventory(ROOT / "book")
+    sections = inventory(ROOT / "latex-book")
     if first < 1 or last > len(sections) or first > last:
         print(f"Chapter range must lie between 1 and {len(sections)}.", file=sys.stderr)
         return 2
@@ -577,7 +598,7 @@ def command_review(
     )
     print(f"Original sources paired: {paired}/{len(records)}.")
     if not records:
-        print("Generate section candidates first with 'python3 rosetta.py candidate N M'.")
+        print("No diagram review records found in the maintained files.")
         return 0
     for record in records:
         print(
@@ -594,6 +615,10 @@ def build_parser() -> argparse.ArgumentParser:
         description="Convert and check the HoTT Rosetta book sources.",
     )
     subcommands = parser.add_subparsers(dest="command", required=True)
+    content = subcommands.add_parser("content-diff", help="compare shared content in two committed branches")
+    content.add_argument("target")
+    content.add_argument("--source", default="HEAD")
+    content.add_argument("--public", action="store_true", help="also reject development files in the target")
     inventory_parser = subcommands.add_parser(
         "inventory", help="list the book sections in source order"
     )
@@ -638,13 +663,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     candidate_chapter.add_argument("section", type=int)
     convert = subcommands.add_parser(
-        "convert", help="generate section, exercise, and chapter candidates safely"
+        "convert", help="create missing files only; preserve all existing Rosetta files"
     )
     convert.add_argument("--from", dest="first", type=int, default=3)
     convert.add_argument("--to", dest="last", type=int, default=22)
     candidate_check = subcommands.add_parser(
         "typecheck-candidate",
-        help="typecheck generated content under a non-conflicting temporary module",
+        help="typecheck the existing maintained section file",
     )
     candidate_check.add_argument("section", type=int)
     candidate_check.add_argument("subsection", type=int)
@@ -654,7 +679,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     exercise_check = subcommands.add_parser(
         "typecheck-exercise-candidate",
-        help="typecheck one generated exercise under a temporary module name",
+        help="typecheck the existing maintained exercise file",
     )
     exercise_check.add_argument("section", type=int)
     exercise_check.add_argument("exercise", type=int)
@@ -663,7 +688,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="run Agda even when the candidate has an unfinished exercise",
     )
     typecheck_all = subcommands.add_parser(
-        "typecheck-all", help="typecheck aggregate generated chapter modules",
+        "typecheck-all", help="typecheck maintained chapter modules",
     )
     typecheck_all.add_argument("--from", dest="first", type=int, default=1)
     typecheck_all.add_argument("--to", dest="last", type=int, default=22)
@@ -694,6 +719,15 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> int:
     arguments = build_parser().parse_args(argv)
+    if arguments.command == "content-diff":
+        from .publication import compare_content
+        try:
+            differences = compare_content(ROOT, arguments.source, arguments.target, arguments.public)
+        except (OSError, ValueError, subprocess.CalledProcessError) as error:
+            print(str(error), file=sys.stderr)
+            return 2
+        print("\n".join(differences) if differences else "Shared content matches.")
+        return 1 if differences else 0
     if arguments.command == "inventory":
         return command_inventory(arguments.json)
     if arguments.command == "prototype":

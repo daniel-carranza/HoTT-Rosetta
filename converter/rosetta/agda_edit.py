@@ -1,20 +1,22 @@
 """Safe edits of curated Agda blocks from the local review program."""
 
 import json
+import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
 from .agda_manifest import source_digest
-from .agda_typecheck import candidate_for_destination
 from .editing import EditConflict, EditPreview, apply_edit, preview_edit
-from .generate import write_candidate
+from .maintained import destination_path, dependency_digest, replace_block
 
 
 @dataclass(frozen=True)
 class AgdaBlockEdit:
     preview: EditPreview
+    document_preview: EditPreview
     destination: str
     provenance_kind: str
+    evidence_digest: str
 
 
 def _manifest_values(path: Path, seen=None):
@@ -60,7 +62,13 @@ def preview_agda_block_edit(
     cleaned_code = code.rstrip("\n")
     if not cleaned_code.strip():
         raise ValueError("Agda code cannot be empty")
-    path, value, block = _find_block(root, block_id)
+    path, _, _ = _find_block(root, block_id)
+    original_manifest = path.read_text()
+    value = json.loads(original_manifest)
+    matches = [block for block in value["blocks"] if block.get("block_id") == block_id]
+    if len(matches) != 1:
+        raise EditConflict("The manifest changed while the edit was prepared")
+    block = matches[0]
     kind = block["provenance_kind"]
     note = adaptation_note.strip()
     if kind == "handwritten":
@@ -81,10 +89,16 @@ def preview_agda_block_edit(
         else:
             block["source_note"] = note
     new_text = json.dumps(value, indent=2, ensure_ascii=False) + "\n"
+    destination = destination_path(root, block["destination"])
+    document = destination.read_text()
+    manifest_preview = preview_edit(path, new_text, original=original_manifest)
+    document_preview = preview_edit(destination, replace_block(document, block_id, cleaned_code), original=document)
     return AgdaBlockEdit(
-        preview=preview_edit(path, new_text),
+        preview=manifest_preview,
+        document_preview=document_preview,
         destination=block["destination"],
         provenance_kind=new_kind,
+        evidence_digest=hashlib.sha256((manifest_preview.original_digest + document_preview.original_digest + dependency_digest(root, block["destination"])).encode()).hexdigest(),
     )
 
 
@@ -95,12 +109,18 @@ def apply_agda_block_edit(
     adaptation_note: str,
     expected_manifest_digest: str,
 ) -> tuple[Path, Path]:
-    """Apply a confirmed edit and regenerate its active destination."""
+    """Patch only the selected fence, preserving all other maintained content."""
 
     edit = preview_agda_block_edit(root, block_id, code, adaptation_note)
-    if edit.preview.original_digest != expected_manifest_digest:
-        raise EditConflict("The Agda manifest changed after preview; reload and try again.")
-    backup = apply_edit(edit.preview, root)
-    filename, document = candidate_for_destination(root, edit.destination)
-    generated = write_candidate(root, filename, document)
-    return backup, generated
+    if edit.evidence_digest != expected_manifest_digest:
+        raise EditConflict("The manifest, Rosetta file, or dependencies changed after preview; reload and try again.")
+    backup = apply_edit(edit.document_preview, root)
+    try:
+        apply_edit(edit.preview, root)
+    except BaseException:
+        # Restore only our own write; never replace a subsequent collaborator edit.
+        current = edit.document_preview.path.read_text()
+        if current == edit.document_preview.new_text:
+            apply_edit(preview_edit(edit.document_preview.path, backup.read_text(), original=current), root)
+        raise
+    return backup, edit.document_preview.path

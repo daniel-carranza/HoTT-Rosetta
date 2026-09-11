@@ -36,7 +36,7 @@ jobs:
       - name: Whitespace checks
         run: git diff --check
 
-  regeneration:
+  content-preservation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -51,10 +51,10 @@ jobs:
             https://github.com/jgm/pandoc/releases/download/3.10.1/pandoc-3.10.1-1-amd64.deb
           echo "b419369915e0f3181be0afdb040ec8ecc6b70e72e5992652a0d83aed9e6bc109  /tmp/pandoc.deb" | sha256sum --check
           sudo dpkg --install /tmp/pandoc.deb
-      - name: Regenerate Chapters 1–22
+      - name: Create missing files only
         run: python3 rosetta.py convert --from 1 --to 22
-      - name: Require a reproducible tracked book
-        run: git diff --exit-code -- rosetta-book
+      - name: Require maintained content to remain untouched
+        run: git diff --exit-code
 
   agda-typecheck:
     runs-on: ubuntu-latest

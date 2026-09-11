@@ -46,7 +46,7 @@ def repository_checks(root: Path) -> List[Diagnostic]:
     else:
         findings.append(Diagnostic("ok", "Active tools do not reference the backup document tree."))
     try:
-        sections = inventory(root / "book")
+        sections = inventory(root / "latex-book")
     except (OSError, ValueError) as error:
         return [Diagnostic("error", str(error))]
 
@@ -111,37 +111,4 @@ def repository_checks(root: Path) -> List[Diagnostic]:
     else:
         findings.append(Diagnostic("ok", "All repository-local imports resolve."))
 
-    try:
-        reviews = discover_diagram_reviews(root)
-        pending = sum(record.item.state == "pending" for record in reviews)
-        stale = sum(record.item.state == "stale" for record in reviews)
-        findings.append(
-            Diagnostic(
-                "ok",
-                f"Diagram review data is valid ({len(reviews)} drafts, "
-                f"{pending} pending, {stale} stale; review is optional).",
-            )
-        )
-    except (OSError, ValueError, json.JSONDecodeError) as error:
-        findings.append(Diagnostic("error", f"Invalid diagram review data: {error}"))
-    try:
-        agda_reviews = discover_agda_reviews(root)
-        pending = sum(record.state == "pending" for record in agda_reviews)
-        needs_review = sum(
-            record.state == "needs-further-review" for record in agda_reviews
-        )
-        stale = sum(record.state == "stale" for record in agda_reviews)
-        missing = sum(record.provenance_kind == "missing" for record in agda_reviews)
-        code_blocks = len(agda_reviews) - missing
-        findings.append(
-            Diagnostic(
-                "ok",
-                f"Agda review data is valid ({code_blocks} code blocks, "
-                f"{missing} missing-code items, "
-                f"{pending} pending, {needs_review} need further review, "
-                f"{stale} stale; review is optional).",
-            )
-        )
-    except (OSError, ValueError, json.JSONDecodeError, RuntimeError) as error:
-        findings.append(Diagnostic("error", f"Invalid Agda review data: {error}"))
     return findings

@@ -14,12 +14,12 @@ from rosetta.latex import inventory
 
 class GenerateTests(unittest.TestCase):
     @patch("rosetta.generate.subprocess.run")
-    def test_agda_interface_option_is_used_when_supported(self, run):
+    def test_agda_keeps_normal_interface_caching(self, run):
         run.return_value.stdout = "  --no-write-interfaces"
         run.return_value.stderr = ""
         self.assertEqual(
             agda_typecheck_options("agda"),
-            ["--no-libraries", "--no-write-interfaces"],
+            ["--no-libraries"],
         )
 
     @patch("rosetta.generate.subprocess.run")
@@ -30,7 +30,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_candidate_section_rejects_curated_destination_name_mismatch(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[2]
+        section = inventory(root / "latex-book")[2]
         block = AgdaBlock(
             block_id="registered-name",
             provenance_kind="handwritten",
@@ -72,7 +72,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_block_imports_are_added_to_module_header(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[2]
+        section = inventory(root / "latex-book")[2]
         block = AgdaBlock(
             block_id="example",
             provenance_kind="exact",
@@ -95,7 +95,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_section_level_anchor_supports_unnumbered_code(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[2]
+        section = inventory(root / "latex-book")[2]
         block = AgdaBlock(
             block_id="section-level-example",
             provenance_kind="handwritten",
@@ -117,7 +117,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_chapter_three_foundational_blocks_are_generated(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[2]
+        section = inventory(root / "latex-book")[2]
         blocks = load_manifest(root / "data" / "agda-blocks.json")
         _, document = candidate_section(section, 1, blocks)
         self.assertIn(
@@ -132,7 +132,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_exercise_and_chapter_candidates_are_self_contained(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[2]
+        section = inventory(root / "latex-book")[2]
         exercise_name, exercise = candidate_exercise(root, section, 1)
         self.assertIn(f"module {exercise_name.removesuffix('.lagda.md')} where", exercise)
         self.assertIn("## Problem statement", exercise)
@@ -142,7 +142,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_exercise_manifest_blocks_are_inserted_at_solution_anchor(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[2]
+        section = inventory(root / "latex-book")[2]
         blocks = load_manifest(root / "data" / "agda-blocks.json")
         _, exercise = candidate_exercise(root, section, 2, blocks)
         self.assertIn("<!-- rosetta-item: exercise-3-2 -->", exercise)
@@ -152,7 +152,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_chapter_four_boolean_exercise_is_fully_curated(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[3]
+        section = inventory(root / "latex-book")[3]
         blocks = load_manifest(root / "data" / "agda-blocks.json")
         _, exercise = candidate_exercise(root, section, 2, blocks)
         self.assertIn("data bool : Type lzero where", exercise)
@@ -163,7 +163,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_chapter_four_negation_exercise_blocks_are_curated(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[3]
+        section = inventory(root / "latex-book")[3]
         blocks = load_manifest(root / "data" / "agda-blocks.json")
         _, exercise = candidate_exercise(root, section, 3, blocks)
         self.assertIn("law-of-non-contradiction :", exercise)
@@ -172,7 +172,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_chapter_four_list_exercise_blocks_are_curated(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[3]
+        section = inventory(root / "latex-book")[3]
         blocks = load_manifest(root / "data" / "agda-blocks.json")
         _, exercise = candidate_exercise(root, section, 4, blocks)
         self.assertIn("data list", exercise)
@@ -182,7 +182,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_chapter_five_exercise_blocks_are_all_curated(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[4]
+        section = inventory(root / "latex-book")[4]
         blocks = load_manifest(root / "data" / "agda-blocks.json")
         for number in range(1, 9):
             filename, exercise = candidate_exercise(root, section, number, blocks)
@@ -192,7 +192,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_chapter_six_exercise_blocks_are_all_curated(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[5]
+        section = inventory(root / "latex-book")[5]
         blocks = load_manifest(root / "data" / "agda-blocks.json")
         for number in range(1, 7):
             filename, exercise = candidate_exercise(root, section, number, blocks)
@@ -202,7 +202,7 @@ class GenerateTests(unittest.TestCase):
 
     def test_blocked_exercise_block_is_reviewable_but_not_generated(self):
         root = Path(__file__).resolve().parent.parent
-        section = inventory(root / "book")[2]
+        section = inventory(root / "latex-book")[2]
         blocks = load_manifest(root / "data" / "agda-blocks.json")
         _, exercise = candidate_exercise(root, section, 6, blocks)
         blocked = [

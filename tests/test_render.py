@@ -14,7 +14,7 @@ class RenderTests(unittest.TestCase):
 
         kinds = set()
         citation_count = 0
-        for chapter in inventory(ROOT / "book"):
+        for chapter in inventory(ROOT / "latex-book"):
             fragments = [("chapter", section_introduction(chapter.path))]
             fragments.extend(
                 ("section", subsection_body(chapter.path, number)[1])
@@ -37,18 +37,18 @@ class RenderTests(unittest.TestCase):
         self.assertGreaterEqual(citation_count, 14)
 
     def test_mapping_truncations_keeps_citation_delimiters_and_diagram_ids(self):
-        result = render_section(ROOT / "book" / "propositional-truncation.tex", 14, 4)
+        result = render_section(ROOT / "latex-book" / "propositional-truncation.tex", 14, 4)
         self.assertIn("citation: `Kraus`", result)
         self.assertIn("h:‖A‖→Σ(b:B) ‖Σ(x:A) f(x)=b‖", result)
         self.assertNotIn(r"\|", result)
         for marker in ("e3422d10b67e", "44459fe1a1c2", "7e7385271393"):
             self.assertIn(f"rosetta-diagram: {marker};", result)
-        finite = render_section(ROOT / "book" / "finite-types.tex", 16, 3)
+        finite = render_section(ROOT / "latex-book" / "finite-types.tex", 16, 3)
         self.assertIn("`‖Π(x:A) B(x)‖`", finite)
         self.assertNotIn(r"\|", finite)
 
     def test_propositional_logic_table_preserves_all_eight_interpretations(self):
-        result = render_section(ROOT / "book" / "propositional-truncation.tex", 14, 3)
+        result = render_section(ROOT / "latex-book" / "propositional-truncation.tex", 14, 3)
         rows = [line for line in result.splitlines() if line.startswith("| `")]
         import re
         self.assertEqual([re.findall(r"`([^`]+)`", row) for row in rows], [
@@ -62,7 +62,7 @@ class RenderTests(unittest.TestCase):
         self.assertEqual(result.count("rosetta-diagram:"), 2)
 
     def test_truncation_universe_rules_preserve_nested_conclusions(self):
-        result = render_section(ROOT / "book" / "propositional-truncation.tex", 14, 2)
+        result = render_section(ROOT / "latex-book" / "propositional-truncation.tex", 14, 2)
         self.assertIn("Γ⊢ ‖A‖ type", result)
         self.assertIn("X:𝒰⊢ ‖X‖̌:𝒰", result)
         self.assertIn("X:𝒰⊢ T(‖X‖̌)≐‖T(X)‖ type", result)
@@ -71,7 +71,7 @@ class RenderTests(unittest.TestCase):
         self.assertNotIn("$Γ", result)
 
     def test_strong_induction_keeps_asterisk_reference_and_both_case_displays(self):
-        result = render_section(ROOT / "book" / "funext.tex", 13, 5)
+        result = render_section(ROOT / "latex-book" / "funext.tex", 13, 5)
         self.assertIn("mentioned in (\\*).", result)
         self.assertIn("f : (m≤ n+1)→ (m≤ n)+(m=n+1)(*)", result)
         self.assertEqual(result.count("cases {"), 2)
@@ -99,7 +99,7 @@ class RenderTests(unittest.TestCase):
         )
 
     def test_chapter_3_section_2_preserves_structure(self):
-        section = inventory(ROOT / "book")[2]
+        section = inventory(ROOT / "latex-book")[2]
         result = render_section(section.path, 3, 2)
         self.assertIn("# Section 3.2 Addition on the natural numbers", result)
         self.assertIn("## Definition 3.2.1", result)
@@ -109,7 +109,7 @@ class RenderTests(unittest.TestCase):
         self.assertIn("Proof tree (automatic faithful draft)", result)
 
     def test_function_extensionality_keeps_labelled_maps_and_the_axiom_rule(self):
-        result = render_section(ROOT / "book" / "funext.tex", 13, 1)
+        result = render_section(ROOT / "latex-book" / "funext.tex", 13, 1)
         self.assertIn("⟶[i] (Π(x:A) Σ(b:B(x)) f(x)=b)", result)
         self.assertIn("⟶[r] (Σ(g:Π(x:A) B(x)) f~ g)", result)
         self.assertIn("Γ,x:A⊢ B(x) type", result)

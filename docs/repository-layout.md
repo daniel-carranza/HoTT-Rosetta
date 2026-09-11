@@ -1,25 +1,71 @@
-# Repository layout and inventory
+# Repository layout and shared content
 
-This inventory distinguishes durable inputs and products from disposable local
-state.
+The primary content is the maintained Rosetta, whose directory is configured in
+data/project-layout.json (currently rosetta-book/). Both Markdown and Agda are
+edited directly.
 
-| Path | Classification | Versioned | Purpose |
-| --- | --- | --- | --- |
-| `book/` | source | yes | LaTeX, bibliography, class files, and source PDF |
-| `rosetta-book/` | generated product | yes | 22 chapters plus registered sections, exercises, and support modules |
-| `converter/` | tool | yes | Python conversion, checks, provenance, and review server |
-| `data/` | curated data/configuration | yes | layout, names, Agda provenance, coverage, gaps, and reviews |
-| `tests/` | tool validation | yes | standard-library unit tests |
-| `scripts/` | maintenance tools | yes | controlled manifest utilities |
-| `docs/` | documentation | yes | contracts, guides, handoff, and baseline evidence |
-| `skills/` | agent workflow | yes | translation instructions and references |
-| `external/agda-unimath/` | pinned external source | gitlink | provenance source only; never a generated-book import |
-| `archive/legacy-rosetta/` | historical archive | yes | former `src/`; forbidden to active runtime workflows |
-| `_build/` | cache/staging | no | candidate typechecks and review cache |
-| `.rosetta-backups/` | recoverable local backup | no | atomic-edit recovery copies |
+daniel-carranza/HoTT-Rosetta main is the development home. Its release branch
+prepares the public tree for EgbertRijke/HoTT-Rosetta main.
 
-The authoritative active-product path is the value in
-`data/project-layout.json`. Runtime code must not infer another product path.
-The file registry in `data/rosetta-files.json` enumerates durable generated
-documents; unregistered caches and Agda `.agdai` interfaces are not product
-files.
+The public tree contains exactly these content roots:
+
+- The configured Rosetta directory, including its local support modules and
+  HoTT-Rosetta.agda-lib.
+- latex-book/, the LaTeX sources and accompanying book assets.
+- README.md.
+- BENCHMARK.md.
+
+Everything else is development-only, including docs/, converter/, data/, tests/,
+skills/, scripts/, AGENTS.md, CI configuration, pinned external sources, and
+editor/cache configuration. No docs/ file is exported to the public repository.
+
+## Development setup
+
+```sh
+git clone --recurse-submodules https://github.com/daniel-carranza/HoTT-Rosetta.git
+cd HoTT-Rosetta
+```
+
+An existing clone can initialize provenance with
+git submodule update --init external/agda-unimath.
+Install Python 3.9 or newer, Pandoc, and Agda. CI uses Python 3.10 and Agda 2.8.0.
+The source library is pinned for provenance; the Rosetta never imports it.
+
+## Synchronizing accepted content
+
+There is generally one shared Rosetta, not separate development mathematics or
+proposal solutions. Fetch the active branches and inspect both histories and
+worktrees before editing. Preserve accepted changes from either repository;
+reconcile concurrent edits individually rather than replacing an entire tree.
+
+Keep content changes separate from backend changes in focused commits when
+practical. Carry those content commits to the other active branches, resolving
+conflicts with the current maintained files. Never merge the whole development
+tree into release or the public repository. Retired proposal and archival
+branches are historical evidence, not additional maintained versions.
+
+After committing, compare the shared content:
+
+```text
+python3 rosetta.py content-diff fork/release --public
+python3 rosetta.py content-diff origin/main --public
+```
+
+These commands compare committed Git content, not working-tree changes. They
+report missing or differing content and, with --public, development files that
+must be excluded. The old book/ path is normalized for migration comparisons.
+They make no changes and do not regenerate files. An exact result checks bytes
+and file modes; it does not establish mathematical completeness.
+
+For the initial transition, preserve release's README and latex-book/ rename,
+incorporate the newer public content, and make one focused reconciliation commit
+on release. Inspect the final public tree before publishing. Use ordinary
+fast-forward pushes; never rewrite public history or overwrite new remote work.
+
+The token in the current environment permits publishing to the fork only.
+Prepare and validate the fork release first. A maintainer with access to the
+original repository must publish that content there; do not repeatedly attempt
+unauthorized pushes or treat an unpublished public update as completed.
+
+Build caches, disposable draft checks, and recoverable review backups are
+development artifacts, not a second maintained Rosetta.

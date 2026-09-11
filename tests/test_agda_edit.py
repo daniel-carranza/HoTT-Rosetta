@@ -13,6 +13,17 @@ class AgdaEditTests(unittest.TestCase):
     def _root(self, directory: str) -> tuple[Path, Path]:
         root = Path(directory)
         (root / "data").mkdir()
+        (root / "data" / "project-layout.json").write_text(json.dumps({
+            "format_version": 1, "rosetta_directory": "product",
+        }))
+        (root / "product").mkdir()
+        (root / "product" / "section-1-1-example.lagda.md").write_text(
+            "# Collaborator prose\n\n"
+            "```agda\nmodule section-1-1-example where\n```\n\n"
+            "<!-- rosetta-agda-block: example-block -->\n\n"
+            "```agda\noriginal : Set\noriginal = Set\n```\n\n"
+            "Manually improved ending.\n"
+        )
         source = root / "external" / "agda-unimath" / "src" / "example.lagda.md"
         source.parent.mkdir(parents=True)
         source.write_text("original : Set\noriginal = Set\n")
@@ -54,30 +65,22 @@ class AgdaEditTests(unittest.TestCase):
             self.assertIn('"provenance_kind": "adapted"', edit.preview.diff)
             self.assertIn("Adjusted for local names.", edit.preview.diff)
 
-    def test_confirmed_edit_is_atomic_and_regenerates_destination(self):
+    def test_confirmed_edit_preserves_surrounding_manual_content(self):
         with tempfile.TemporaryDirectory() as directory:
             root, shard = self._root(directory)
             edit = preview_agda_block_edit(
                 root, "example-block", "changed", "Adjusted for local names."
             )
-            generated = root / "rosetta-book" / "section-1-1-example.lagda.md"
-            generated.parent.mkdir()
-            with patch(
-                "rosetta.agda_edit.candidate_for_destination",
-                return_value=(generated.name, "candidate"),
-            ), patch(
-                "rosetta.agda_edit.write_candidate", return_value=generated
-            ) as write:
-                backup, destination = apply_agda_block_edit(
-                    root,
-                    "example-block",
-                    "changed",
-                    "Adjusted for local names.",
-                    edit.preview.original_digest,
-                )
+            generated = root / "product" / "section-1-1-example.lagda.md"
+            original = generated.read_text()
+            backup, destination = apply_agda_block_edit(
+                root, "example-block", "changed", "Adjusted for local names.",
+                edit.evidence_digest,
+            )
             self.assertTrue(backup.is_file())
             self.assertEqual(destination, generated)
-            write.assert_called_once_with(root, generated.name, "candidate")
+            self.assertEqual(backup.read_text(), original)
+            self.assertEqual(generated.read_text(), original.replace("original : Set\noriginal = Set", "changed"))
             saved = json.loads(shard.read_text())["blocks"][0]
             self.assertEqual(saved["code"], "changed")
             self.assertEqual(saved["provenance_kind"], "adapted")
@@ -95,7 +98,7 @@ class AgdaEditTests(unittest.TestCase):
                     "example-block",
                     "changed",
                     "Adjusted for local names.",
-                    edit.preview.original_digest,
+                    edit.evidence_digest,
                 )
 
 

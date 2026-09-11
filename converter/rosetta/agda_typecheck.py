@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import Optional, Set
 
 from .agda_manifest import load_manifest
-from .generate import candidate_exercise, candidate_section, typecheck_candidate
-from .latex import inventory
+from .generate import typecheck_candidate
 from .layout import rosetta_directory
+from .maintained import destination_path, dependency_digest, replace_block
 
 
 def _store_path(root: Path) -> Path:
@@ -55,26 +55,22 @@ def deferred_exercises(blocks, destination: str, document: str = "") -> list:
 def deferred_message(blocks) -> str:
     items = ", ".join(dict.fromkeys(block.item_id for block in blocks))
     return (
-        "Agda was not run. This file contains or depends on unfinished "
-        f"training mathematics: {items}. The proposal branch must pass Agda "
-        "before these exercises are accepted."
+        "Agda was not run. This file contains or depends on "
+        f"recorded unfinished mathematics: {items}."
     )
 
 
 def candidate_for_destination(
     root: Path, destination: str, blocks=None
 ) -> tuple[str, str]:
-    sections = inventory(root / "book")
-    blocks = blocks or load_manifest(root / "data" / "agda-blocks.json")
-    section_match = re.match(r"section-(\d+)-(\d+)-", destination)
-    if section_match:
-        chapter, subsection = map(int, section_match.groups())
-        return candidate_section(sections[chapter - 1], subsection, blocks)
-    exercise_match = re.match(r"exercise-(\d+)-(\d+)-", destination)
-    if exercise_match:
-        chapter, exercise = map(int, exercise_match.groups())
-        return candidate_exercise(root, sections[chapter - 1], exercise, blocks)
-    raise ValueError(f"Unsupported Agda destination: {destination}")
+    """Read maintained content; optional blocks are explicit draft overlays."""
+    document = destination_path(root, destination).read_text()
+    if blocks is not None:
+        originals = {b.block_id: b for b in load_manifest(root / "data" / "agda-blocks.json")}
+        for block in blocks:
+            if block.destination == destination and block != originals.get(block.block_id):
+                document = replace_block(document, block.block_id, block.code)
+    return destination, document
 
 
 def prepare_candidate_dependencies(
@@ -99,31 +95,7 @@ def prepare_candidate_dependencies(
 def typecheck_fingerprint(root: Path, destination: str, blocks=None) -> str:
     """Fingerprint the Agda content without rendering any candidates."""
 
-    blocks = blocks or load_manifest(root / "data" / "agda-blocks.json")
-    selected = [block for block in blocks if block.destination == destination]
-    value = [destination]
-    imports = []
-    for block in selected:
-        value.extend(
-            (block.block_id, block.code, block.conversion_status, *block.imports)
-        )
-        imports.extend(block.imports)
-    for module in sorted(set(imports)):
-        path = rosetta_directory(root) / (module + ".lagda.md")
-        if path.exists():
-            value.extend((module, hashlib.sha256(path.read_bytes()).hexdigest()))
-        dependency = module + ".lagda.md"
-        if any(block.destination == dependency for block in blocks):
-            dependency_blocks = [
-                block for block in blocks if block.destination == dependency
-            ]
-            value.extend(
-                item
-                for block in dependency_blocks
-                for item in (block.block_id, block.code, block.conversion_status)
-            )
-    value.extend(block.block_id for block in deferred_exercises(blocks, destination))
-    return hashlib.sha256("\0".join(value).encode()).hexdigest()
+    return dependency_digest(root, destination)
 
 
 def typecheck_result(root: Path, destination: str) -> dict:

@@ -26,8 +26,8 @@ class EditPreview:
     diff: str
 
 
-def preview_edit(path: Path, new_text: str) -> EditPreview:
-    original = path.read_text()
+def preview_edit(path: Path, new_text: str, *, original: str = None) -> EditPreview:
+    original = path.read_text() if original is None else original
     diff = "".join(
         difflib.unified_diff(
             original.splitlines(keepends=True),
@@ -77,6 +77,8 @@ def apply_edit(preview: EditPreview, repository_root: Path) -> Path:
             handle.write(preview.new_text)
             handle.flush()
             os.fsync(handle.fileno())
+        if text_digest(preview.path.read_text()) != preview.original_digest:
+            raise EditConflict(f"{preview.path} changed while the edit was being saved")
         os.replace(temporary_name, preview.path)
     except BaseException:
         try:

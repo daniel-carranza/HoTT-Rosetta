@@ -1,5 +1,12 @@
 # Section Agda audit
 
+Historical audit evidence through 2026-09-07. Under the September 11 policy,
+the accepted proposal solutions are shared maintained content; former empty
+main sites and branch restrictions below are superseded. Do not regenerate
+files or restore holes based on this record. The old book/ directory is now
+latex-book/. Current maintained-file checks and mathematical coverage must be
+assessed separately; consult implementation-handoff.md and conversion-contract.md.
+
 Audited against the LaTeX, generated prose, and curated declarations, not file
 presence or review state. Source locations and hashes are in the block
 manifests at pinned commit `c85d7fb834778f96a66576318cdc4ef3d4b80a26`.

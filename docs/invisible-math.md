@@ -1,5 +1,20 @@
 # Invisible mathematics
 
+Current policy (2026-09-11): add source-backed auxiliary results at their
+natural mathematical homes, including earlier complete sections. Keep one
+shared maintained Rosetta. The old proposal solutions were accepted upstream
+in fae1df6. Never restore the former artificial holes or regenerate files.
+
+The remainder of this document is HISTORICAL provenance and placement evidence
+from before that policy change. References below to empty main blocks,
+proposal-only additions, deferral, regeneration, or restrictions on earlier
+sections describe the former workflow and are not current instructions.
+Use docs/conversion-contract.md and docs/agda-training-exercises.md for current
+policy and acceptance status. Old book/ source references now resolve under
+latex-book/. Source ranges and mathematical reasoning remain useful evidence.
+
+## Historical provenance notes
+
 This file records the mathematics behind each empty auxiliary Agda block.
 
 For each exercise, record:

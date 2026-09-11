@@ -22,8 +22,8 @@ class ReviewTests(unittest.TestCase):
 
     def _review_repository(self, root: Path, source: str) -> str:
         markdown = normalize_markdown_math(f"``` math\n{source}\n```")
-        (root / "book").mkdir()
-        (root / "book" / "sample.tex").write_text(source)
+        (root / "latex-book").mkdir()
+        (root / "latex-book" / "sample.tex").write_text(source)
         self._configure(root)
         candidates = root / "work" / "rosetta"
         candidates.mkdir(parents=True)
@@ -56,8 +56,8 @@ A \arrow[r] & B
         markdown = normalize_markdown_math(f"``` math\n{source}\n```")
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "book").mkdir()
-            (root / "book" / "sample.tex").write_text(source)
+            (root / "latex-book").mkdir()
+            (root / "latex-book" / "sample.tex").write_text(source)
             self._configure(root)
             candidates = root / "work" / "rosetta"
             candidates.mkdir(parents=True)

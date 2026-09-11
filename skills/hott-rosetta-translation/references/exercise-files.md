@@ -1,19 +1,18 @@
 # Exercise files
 
-Exercise files remain part of complete prose conversion, but their Agda
-solutions are lower priority than section content.
+Exercise prose and accepted Agda are maintained content. Preserve the complete
+problem, multipart structure, collaborator edits, and solution blocks.
 
-Translate each full `\exitem` into an exercise file with a descriptive title,
-`## Problem statement`, and `## Solution`. The review program links exercises
-to their problem statements. Preserve multipart structure clearly.
+Create an exercise file only if missing. Edit an existing file directly. New
+exercise formalization is lower priority than Chapters 3--22 section work unless
+requested or required by a section. Do not remove accepted exercise work because
+of that priority.
 
-Do not proactively search for or add missing exercise Agda unless the user
-requests it or a section requires the code. When exercise Agda is in scope,
-follow the same pinned-source, provenance, no-handwritten-code, local-import,
-and review-comment rules as section work. If no applicable upstream source
-exists, leave the candidate empty and record a useful gap comment only when it
-would help reviewers.
+Use pinned-source Agda, recorded provenance, and local imports. Place prerequisite
+results where the mathematics belongs; do not create a separate proposal version.
+Report actual source gaps without inventing code. BENCHMARK.md lists intentional
+public benchmark exercises independently of the retired auxiliary-hole policy.
 
-Regenerate through the converter. If Agda changed, run
-`python3 rosetta.py typecheck-exercise-candidate N K` and typecheck the
-aggregate chapter when appropriate.
+When exercise Agda changes, run
+python3 rosetta.py typecheck-exercise-candidate N K and check affected aggregates.
+Propagate accepted content changes between active branches.

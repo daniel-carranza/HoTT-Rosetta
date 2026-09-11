@@ -11,6 +11,7 @@ from .agda_manifest import load_manifest
 from .agda_typecheck import candidate_for_destination
 from .editing import apply_edit, preview_edit
 from .generate import typecheck_candidate
+from .maintained import dependency_digest, destination_path
 
 
 @dataclass(frozen=True)
@@ -19,6 +20,7 @@ class AgdaScratchpad:
     code: str
     adaptation_note: str
     base_manifest_digest: str
+    base_content_digest: str = ""
     status: str = "not-checked"
     message: str = ""
     checked_sha256: str = ""
@@ -65,18 +67,26 @@ def _save(root: Path, draft: Optional[AgdaScratchpad], block_id: str) -> Path:
 
 
 def save_scratchpad(
-    root: Path, block_id: str, code: str, adaptation_note: str = ""
+    root: Path, block_id: str, code: str, adaptation_note: str = "",
+    expected_document_digest: str = "",
 ) -> AgdaScratchpad:
     cleaned = code.rstrip("\n")
     if not cleaned.strip():
         raise ValueError("Scratchpad Agda code cannot be empty")
-    manifest_path, _, _ = _find_block(root, block_id)
+    manifest_path, _, block = _find_block(root, block_id)
     base_digest = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    content_digest = dependency_digest(root, block["destination"])
+    if expected_document_digest and hashlib.sha256(destination_path(root, block["destination"]).read_bytes()).hexdigest() != expected_document_digest:
+        raise ValueError("The Rosetta file changed after the editor was opened; reload it")
+    previous = load_scratchpad(root, block_id)
+    if previous and (previous.base_content_digest != content_digest or previous.base_manifest_digest != base_digest):
+        raise ValueError("The file or dependencies changed; discard the stale draft and reload")
     draft = AgdaScratchpad(
         block_id=block_id,
         code=cleaned,
         adaptation_note=adaptation_note.strip(),
         base_manifest_digest=base_digest,
+        base_content_digest=content_digest,
     )
     _save(root, draft, block_id)
     return draft
@@ -96,6 +106,8 @@ def run_scratchpad_typecheck(root: Path, block_id: str) -> AgdaScratchpad:
     if len(matches) != 1:
         raise ValueError(f"Agda block not found: {block_id}")
     block = matches[0]
+    if dependency_digest(root, block.destination) != draft.base_content_digest:
+        raise ValueError("The Rosetta file or dependencies changed after this draft was started")
     # A blocked source excerpt is omitted by the renderer. Check the supplied
     # draft as active code, or a passing result would say nothing about it.
     replacement = replace(
@@ -126,8 +138,10 @@ def promotion_scratchpad(root: Path, block_id: str) -> AgdaScratchpad:
         raise ValueError("No scratchpad draft has been saved")
     if draft.status != "passed" or draft.checked_sha256 != _code_digest(draft.code):
         raise ValueError("The current scratchpad draft must pass Agda before promotion")
-    manifest_path, _, _ = _find_block(root, block_id)
+    manifest_path, _, block = _find_block(root, block_id)
     current = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
     if current != draft.base_manifest_digest:
         raise ValueError("The curated manifest changed after this draft was started")
+    if dependency_digest(root, block["destination"]) != draft.base_content_digest:
+        raise ValueError("The Rosetta file or dependencies changed after this draft was checked")
     return draft

@@ -1,5 +1,9 @@
 # Historical existing-translation audit baseline
 
+September 11 policy: existing Rosetta files are authoritative maintained content.
+Generation creates missing files only, and accepted content is shared between
+active branches. This historical baseline does not override that policy.
+
 This is archived evidence, not current workflow guidance or a declaration of
 completeness. Current status belongs in `docs/implementation-handoff.md`. It was
 produced with:

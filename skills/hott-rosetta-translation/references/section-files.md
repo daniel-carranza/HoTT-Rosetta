@@ -1,35 +1,23 @@
 # Section files
 
-Section files are the project’s primary content and formalization priority.
-Each corresponds to one LaTeX `\subsection`; its source ends at the next
-`\subsection`, exercises environment, or source-file end.
+Each maintained section corresponds to one LaTeX subsection. Preserve complete
+prose, mathematics, proofs, item numbering, and declaration order. Use the
+registry for filenames and the configured Rosetta directory.
 
-Preserve the complete natural-language mathematics, order, item numbering,
-proofs, references, and displays. Use `# Section N.M Title` and numbered
-level-two item headings such as `## Definition N.M.K`. Let the converter emit
-the module declaration and stable item markers.
+Create a section through the converter only when its file is missing. Existing
+files receive focused edits directly; converter changes do not authorize their
+regeneration. Keep item and block markers where practical to support review,
+but manual contributions remain authoritative without manifest entries.
 
-For every definition, result, construction, or proof that needs formalization,
-search pinned agda-unimath for exact and analogous code. Add only copied,
-provenance-backed code with necessary local adaptations; never invent code.
-Keep code beside the prose step it implements while respecting Agda's
-sequential dependency scope, and use only repository-local imports. For
-relocations and helper groups, read `agda-block-placement.md`.
+New agent-authored Agda must follow exact or analogous pinned agda-unimath code
+with source commit, file, lines, hash, and adaptation notes. Use local imports.
+For placement and auxiliaries, read agda-block-placement.md.
 
-Do not enlarge an earlier complete section solely because later Agda needs an
-auxiliary result. Leave the blocked later formalization empty and record it as
-an exercise. Record the auxiliary result's most natural earlier item, exact
-source, role, order, and later uses as invisible mathematics.
+Add a needed prerequisite at its natural mathematical home, including an earlier
+complete file. Preserve scope and dependency order, avoid cycles, and check every
+affected consumer. Do not create artificial holes or proposal-only solutions.
 
-Every exercise also receives a solution on
-`proposal/agda-exercise-solutions`. Create and publish it from current `main`
-when the first exercise appears. Agents must first publish the cautious version
-on `main`, then bring current `main` into the proposal branch. Place the pinned
-blocks where they fit best mathematically. Make one focused solution commit,
-regenerate, typecheck every affected section and later user, push the proposal,
-and record the solution commit on `main`. Never merge or force-push the
-proposal. Humans may edit either branch without this workflow.
-
-After changing a section, regenerate it, inspect the active output, run
-`python3 rosetta.py typecheck-candidate N M` when it contains Agda, and run the
-repository validation required by `AGENTS.md`.
+Run python3 rosetta.py typecheck-candidate N M on changed section Agda,
+check affected aggregate chapters, and run the validation in AGENTS.md.
+These checks use the actual maintained files. Propagate accepted changes to
+other active branches as described in docs/repository-layout.md.

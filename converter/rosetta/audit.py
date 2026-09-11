@@ -201,7 +201,7 @@ def audit_verbatim_sources(
 
 
 def audit_sections(root: Path, first: int, last: int) -> List[SectionAudit]:
-    sections = inventory(root / "book")
+    sections = inventory(root / "latex-book")
     if first < 1 or last > len(sections) or first > last:
         raise ValueError(f"Chapter range must lie between 1 and {len(sections)}")
 

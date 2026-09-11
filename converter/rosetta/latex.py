@@ -133,7 +133,7 @@ def inventory(book_dir: Path) -> List[SectionSource]:
 
 
 def numbered_items(text: str, section: int, subsection: int) -> List[MathematicalItem]:
-    """Apply the shared theorem counter used by book/hott-intro.tex."""
+    """Apply the shared theorem counter used by latex-book/hott-intro.tex."""
 
     items: List[MathematicalItem] = []
     counter = 0

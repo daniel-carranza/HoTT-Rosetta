@@ -14,7 +14,7 @@ from .active_files import active_files
 
 DIAGRAM_REVIEW_RE = re.compile(
     r"<!-- rosetta-diagram: ([0-9a-f]+); review: (pending|approved) -->\s*"
-    r"\*([^\n]+?) \(automatic draft\)\.\*\s*"
+    r"(?:\*([^\n]+?) \(automatic draft\)\.\*\s*)?"
     r"```text\n(.*?)^```",
     re.MULTILINE | re.DOTALL,
 )
@@ -61,7 +61,7 @@ def diagram_review_items(markdown: str, sources: Dict[str, str]) -> List[Diagram
         DiagramReviewItem(
             stable_id=match.group(1),
             state=match.group(2),
-            description=match.group(3),
+            description=match.group(3) or "Maintained diagram",
             ascii_art=match.group(4).rstrip(),
             source=sources.get(match.group(1), ""),
             comments=[],
@@ -106,7 +106,7 @@ def _stored_item(item: DiagramReviewItem, store: dict) -> DiagramReviewItem:
 def discover_diagram_reviews(root: Path) -> List[DiagramReviewRecord]:
     """Find generated diagram drafts and pair them with book sources."""
 
-    sources = source_diagrams(root / "book")
+    sources = source_diagrams(root / "latex-book")
     store = load_review_store(root / "data" / "diagram-reviews.json")
     records: List[DiagramReviewRecord] = []
     for path in (path for path in active_files(root) if path.name.startswith("section-")):

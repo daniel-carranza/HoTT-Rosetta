@@ -105,7 +105,7 @@ def discover_missing_agda(root: Path) -> List[MissingAgdaItem]:
         for block in load_manifest(root / "data" / "agda-blocks.json")
         if block.conversion_status in {"ready", "exercise"}
     }
-    for chapter in inventory(root / "book"):
+    for chapter in inventory(root / "latex-book"):
         for subsection in range(1, len(chapter.subsections) + 1):
             destination = _generated_section(root, chapter.number, subsection)
             if destination is None:

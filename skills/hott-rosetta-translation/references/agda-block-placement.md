@@ -3,6 +3,11 @@
 Narrative placement and Agda dependency order are independent constraints.
 Choose a location only when it satisfies both.
 
+Existing Rosetta files are maintained source. Apply placement changes directly
+to them and update provenance to describe those changes. A prerequisite may be
+added to an earlier complete file when that is its natural mathematical home.
+Do not leave an artificial hole or create a proposal-only version.
+
 ## Placement model
 
 The renderer emits `<!-- rosetta-item: ID -->` at the start of a numbered item
@@ -44,7 +49,7 @@ order that is not obvious from the manifest.
 4. When splitting a contiguous upstream excerpt, preserve any required
    anonymous module parameters. Restoring that wrapper changes the stored text,
    so mark the block `adapted` and explain the change in `source_note`.
-5. Regenerate every affected destination. Inspect the rendered prose around
+5. Edit every affected maintained destination narrowly. Inspect the prose around
    each fence, not only the code or manifest diff.
 6. Typecheck the source and destination sections, plus downstream consumers.
    Run the full unit suite, `python3 rosetta.py check`, and `git diff --check`.

@@ -70,7 +70,7 @@ class ActiveFileTests(unittest.TestCase):
             path.write_text("## Definition 1.2.3\n\nold <text>\n")
             index = render_file_index([path])
             reader = render_file_reader(path.name, path.read_text())
-            self.assertIn("Generated Rosetta files", index)
+            self.assertIn("Maintained Rosetta files", index)
             self.assertIn(path.name, index)
             self.assertIn("<h2 id=\"item-1.2.3\"", reader)
             self.assertIn("old &lt;text&gt;", reader)
