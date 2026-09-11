@@ -75,7 +75,7 @@ class PreservationTests(unittest.TestCase):
             path = root / "product" / edit.destination
             path.write_text(path.read_text() + "Another collaborator's correction\n")
             before = (path.read_bytes(), manifest.read_bytes())
-            with self.assertRaisesRegex(RuntimeError, "changed after preview"):
+            with self.assertRaisesRegex(ValueError, "read-only"):
                 apply_agda_block_edit(root, "example-block", "changed", "Local change", edit.evidence_digest)
             self.assertEqual(before, (path.read_bytes(), manifest.read_bytes()))
 

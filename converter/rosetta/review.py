@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from .diagrams import TIKZCD_RE, diagram_stable_id
-from .editing import apply_edit, preview_edit
+from .editing import update_json_store
 from .active_files import active_files
 
 
@@ -138,25 +138,22 @@ def update_diagram_review(
     if not item.source:
         raise ValueError(f"Diagram {stable_id} has no paired source")
     path = root / "data" / "diagram-reviews.json"
-    if not path.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(_empty_store(), indent=2) + "\n")
-    store = load_review_store(path)
-    record = store["diagrams"].setdefault(stable_id, {})
-    record["source_sha256"] = _source_digest(item.source)
-    if state is not None:
-        if state not in {"pending", "approved"}:
-            raise ValueError(f"Unsupported review state: {state}")
-        record["state"] = state
-    else:
-        record.setdefault("state", item.state if item.state != "stale" else "pending")
-    comments = record.setdefault("comments", [])
-    if comment is not None:
-        cleaned = comment.strip()
-        if not cleaned:
-            raise ValueError("Review comments cannot be empty")
-        comments.append(cleaned)
-    new_text = json.dumps(store, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
-    preview = preview_edit(path, new_text)
-    apply_edit(preview, root)
+
+    def update(store):
+        record = store["diagrams"].setdefault(stable_id, {})
+        record["source_sha256"] = _source_digest(item.source)
+        if state is not None:
+            if state not in {"pending", "approved"}:
+                raise ValueError(f"Unsupported review state: {state}")
+            record["state"] = state
+        else:
+            record.setdefault("state", item.state if item.state != "stale" else "pending")
+        comments = record.setdefault("comments", [])
+        if comment is not None:
+            cleaned = comment.strip()
+            if not cleaned:
+                raise ValueError("Review comments cannot be empty")
+            comments.append(cleaned)
+
+    update_json_store(path, root, "diagrams", update)
     return path

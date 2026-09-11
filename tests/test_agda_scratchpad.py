@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from rosetta.agda_scratchpad import (
     discard_scratchpad,
+    draft_revision,
     load_scratchpad,
     promotion_scratchpad,
     run_scratchpad_typecheck,
@@ -119,7 +120,7 @@ class AgdaScratchpadTests(unittest.TestCase):
             manifest.write_text(manifest.read_text() + "\n")
             draft = load_scratchpad(root, "example-block")
             self.assertIsNotNone(draft)
-            discard_scratchpad(root, "example-block")
+            discard_scratchpad(root, "example-block", draft_revision(draft))
             self.assertIsNone(load_scratchpad(root, "example-block"))
 
 

@@ -77,12 +77,21 @@ Agda interface caches are ignored development artifacts. No compiler option may
 turn an incomplete proof into a claimed pass. Legacy explicit exercise deferrals,
 if encountered, mean Agda was not run, never that the file passed.
 
-Review startup, browsing, and comments do not write Rosetta files or regenerate
-them. Typecheck evidence tracks file contents and transitive local imports.
+Review never writes Rosetta files or provenance manifests, including during
+draft checking and suggested-diff display. Automatic promotion and old
+confirmation submissions are disabled. Apply code changes directly in your
+editor and check the maintained file afterward. This avoids replacing a file
+while an independent editor is saving; tool-only locks cannot protect that case.
+Typecheck evidence tracks file contents and transitive local imports.
 An edited curated block is overlaid on the maintained file for a disposable
-scratchpad check. Promotion requires the exact passing draft, unchanged content
-and dependencies, an inspected file/provenance diff, and recoverable backups.
-It patches only the selected fence; it does not regenerate the destination.
+scratchpad check. A passing draft can show a suggested file/provenance diff,
+but neither suggestion is applied by review. Metadata writes are restricted to
+the review/comment, draft, and check-result stores. Their read-modify-write
+transactions are serialized across threads and processes with stable POSIX
+sidecar locks and recoverable backups. Unsupported locking fails closed.
+Draft saves, discards, and typecheck completions require the expected draft
+revision; stale browser tabs cannot overwrite newer draft work. These locks
+coordinate project tools, not independent manual JSON editors or helper scripts.
 Unrecorded direct contributions are visible for review and whole-file checks;
 edit them directly until provenance is recorded.
 

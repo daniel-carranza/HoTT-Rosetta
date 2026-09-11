@@ -230,7 +230,9 @@ answer : Type
             "adapted",
             "token",
         )
-        self.assertIn("Confirm and save Agda edit", edit_preview)
+        self.assertIn("Suggested change — read-only", edit_preview)
+        self.assertNotIn("edit-confirm", edit_preview)
+        self.assertIn("name='draft_revision' value='missing'", editor)
         self.assertIn("-A : Type", edit_preview)
         self.assertIn("adapted", edit_preview)
 

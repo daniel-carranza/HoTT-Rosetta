@@ -11,20 +11,20 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, quote, unquote, urlparse
 
-from .agda_edit import apply_agda_block_edit, preview_agda_block_edit
+from .agda_edit import preview_agda_block_edit
 from .agda_scratchpad import (
     discard_scratchpad,
+    draft_revision,
     load_scratchpad,
     promotion_scratchpad,
     run_scratchpad_typecheck,
     save_scratchpad,
 )
+from .editing import EditConflict
 from .agda_review import (
     AGDA_REVIEW_STATES,
     AgdaReviewRecord,
-    _with_stored_review,
     discover_agda_reviews,
-    load_agda_review_store,
     missing_agda_block_id,
     update_agda_review,
 )
@@ -552,15 +552,21 @@ def render_agda_editor(record: AgdaReviewRecord, token: str, scratchpad=None) ->
     else:
         draft_message = ""
     block = quote(record.block_id)
+    revision_input = (
+        f"<input type='hidden' name='draft_revision' value='{html.escape(draft_revision(scratchpad))}'>"
+    )
     actions = (
         f"<div class='controls'><form method='post' action='/agda/{block}/scratch-typecheck'>"
         f"<input type='hidden' name='token' value='{html.escape(token)}'>"
+        f"{revision_input}"
         "<button type='submit'>Typecheck scratchpad</button></form>"
         f"<form method='post' action='/agda/{block}/scratch-promote'>"
         f"<input type='hidden' name='token' value='{html.escape(token)}'>"
-        "<button type='submit'>Preview promotion</button></form>"
+        f"{revision_input}"
+        "<button type='submit'>Show suggested diff</button></form>"
         f"<form method='post' action='/agda/{block}/scratch-discard'>"
         f"<input type='hidden' name='token' value='{html.escape(token)}'>"
+        f"{revision_input}"
         "<button type='submit'>Discard scratchpad</button></form></div>"
         if scratchpad else ""
     )
@@ -569,17 +575,19 @@ def render_agda_editor(record: AgdaReviewRecord, token: str, scratchpad=None) ->
         f"<p><a href='/agda/{block}'>← Return to review</a></p>"
         "<section class='panel'><h2>Agda scratchpad</h2>"
         "<p>Save and typecheck a temporary draft without changing the curated "
-        "manifest or maintained Rosetta. Only a passing draft can be promoted.</p>"
+        "manifest or maintained Rosetta. Review never saves code to Rosetta files; "
+        "apply any suggested change in your editor.</p>"
         f"<p><span class='badge {html.escape(draft_status)}'>Scratchpad: "
         f"{html.escape(draft_status)}</span></p>{draft_message}"
         f"<form method='post' action='/agda/{block}/scratch-save'>"
         f"<input type='hidden' name='token' value='{html.escape(token)}'>"
         f"<input type='hidden' name='document_digest' value='{html.escape(record.document_sha256)}'>"
+        f"{revision_input}"
         f"<textarea name='code' required>{html.escape(draft_code)}</textarea>"
         "<p><label>Adaptation/source note<br>"
         "<input name='adaptation_note' size='100' "
         f"value='{html.escape(draft_note)}' "
-        "placeholder='Required at promotion when code differs from agda-unimath'></label></p>"
+        "placeholder='Describe how this differs from agda-unimath'></label></p>"
         "<button type='submit'>Save scratchpad draft</button></form>"
         f"{actions}</section>",
     )
@@ -597,17 +605,14 @@ def render_agda_edit_preview(
     return _layout(
         f"Preview edit for {record.item_id}",
         f"<p><a href='/agda/{quote(record.block_id)}/edit'>← Cancel and return to editor</a></p>"
-        "<section class='panel warning'><h2>Confirm curated Agda edit</h2>"
-        f"<p>The saved block will have <strong>{html.escape(provenance_kind)}</strong> provenance. "
-        "Confirming backs up and patches only this code block, updates its provenance, "
-        "and makes prior review evidence stale. Other file content is preserved.</p>"
+        "<section class='panel warning'><h2>Suggested change — read-only</h2>"
+        f"<p>Suggested provenance: <strong>{html.escape(provenance_kind)}</strong>. "
+        "Nothing has been applied. Compare this suggestion with the latest file in your "
+        "editor, make the focused change there, and typecheck the maintained file. "
+        "The provenance diff is a suggestion too; review writes neither file.</p>"
         f"<pre>{html.escape(manifest_diff) if manifest_diff else 'No changes.'}</pre>"
-        f"<form method='post' action='/agda/{quote(record.block_id)}/edit-confirm'>"
-        f"<input type='hidden' name='token' value='{html.escape(token)}'>"
-        f"<input type='hidden' name='manifest_digest' value='{html.escape(manifest_digest)}'>"
-        f"<input type='hidden' name='adaptation_note' value='{html.escape(adaptation_note)}'>"
-        f"<textarea name='code' hidden>{html.escape(code)}</textarea>"
-        "<button type='submit'>Confirm and save Agda edit</button></form></section>",
+        f"<p>Draft code for reference:</p><textarea readonly>{html.escape(code)}</textarea>"
+        "</section>",
     )
 
 
@@ -751,6 +756,7 @@ def make_handler(root: Path, token: str = ""):
 
         def do_POST(self):
             path = urlparse(self.path).path
+            form = {}
             try:
                 length = int(self.headers.get("Content-Length", "0"))
                 if length > 5_000_000:
@@ -784,25 +790,13 @@ def make_handler(root: Path, token: str = ""):
                     ))
                     return
                 if path.startswith("/agda/") and path.endswith("/edit-confirm"):
-                    block_id = unquote(
-                        path.removeprefix("/agda/").removesuffix("/edit-confirm")
-                    )
-                    draft = promotion_scratchpad(root, block_id)
-                    if form.get("code", [""])[0].rstrip("\n") != draft.code:
-                        raise ValueError("The promotion form does not match the passing draft")
-                    if form.get("adaptation_note", [""])[0].strip() != draft.adaptation_note:
-                        raise ValueError("The promotion note does not match the passing draft")
-                    apply_agda_block_edit(
-                        root,
-                        block_id,
-                        form.get("code", [""])[0],
-                        form.get("adaptation_note", [""])[0],
-                        form.get("manifest_digest", [""])[0],
-                    )
-                    discard_scratchpad(root, block_id)
-                    invalidate_records()
-                    self._redirect("/agda/" + quote(block_id))
+                    self._send(410, _layout("Automatic promotion disabled", "<p>Review is read-only for Rosetta files. Apply changes in your editor; this old form cannot save code.</p>"))
                     return
+                if path.startswith("/agda/") and any(path.endswith("/" + action) for action in (
+                    "scratch-save", "scratch-typecheck", "scratch-promote", "scratch-discard"
+                )):
+                    if not form.get("draft_revision", [""])[0]:
+                        raise EditConflict("This draft form is outdated; keep your text and reload the editor")
                 if path.startswith("/agda/") and path.endswith("/scratch-save"):
                     block_id = unquote(
                         path.removeprefix("/agda/").removesuffix("/scratch-save")
@@ -813,6 +807,7 @@ def make_handler(root: Path, token: str = ""):
                         root, block_id, form.get("code", [""])[0],
                         form.get("adaptation_note", [""])[0],
                         expected_document_digest=form.get("document_digest", [""])[0],
+                        expected_draft_revision=form["draft_revision"][0],
                     )
                     self._redirect("/agda/" + quote(block_id) + "/edit")
                     return
@@ -820,14 +815,14 @@ def make_handler(root: Path, token: str = ""):
                     block_id = unquote(
                         path.removeprefix("/agda/").removesuffix("/scratch-typecheck")
                     )
-                    run_scratchpad_typecheck(root, block_id)
+                    run_scratchpad_typecheck(root, block_id, form["draft_revision"][0])
                     self._redirect("/agda/" + quote(block_id) + "/edit")
                     return
                 if path.startswith("/agda/") and path.endswith("/scratch-promote"):
                     block_id = unquote(
                         path.removeprefix("/agda/").removesuffix("/scratch-promote")
                     )
-                    draft = promotion_scratchpad(root, block_id)
+                    draft = promotion_scratchpad(root, block_id, form["draft_revision"][0])
                     records = review_records()
                     matches = [record for record in records if record.block_id == block_id]
                     if not matches:
@@ -844,7 +839,7 @@ def make_handler(root: Path, token: str = ""):
                     block_id = unquote(
                         path.removeprefix("/agda/").removesuffix("/scratch-discard")
                     )
-                    discard_scratchpad(root, block_id)
+                    discard_scratchpad(root, block_id, form["draft_revision"][0])
                     self._redirect("/agda/" + quote(block_id) + "/edit")
                     return
                 if path.startswith("/agda/"):
@@ -865,21 +860,25 @@ def make_handler(root: Path, token: str = ""):
                         comment_author=comment_author,
                         current_record=matches[0],
                     )
-                    store = load_agda_review_store(
-                        root / "data" / "agda-reviews.json"
-                    )
-                    record_cache["records"] = [
-                        _with_stored_review(record, store)
-                        if record.block_id == block_id
-                        else record
-                        for record in records
-                    ]
-                    record_cache["stamp"] = input_stamp()
+                    invalidate_records()
                     self._redirect("/agda/" + quote(block_id))
                     return
                 self._send(404, _layout("Not found", "<p>Page not found.</p>"))
+            except EditConflict as error:
+                self._form_error(409, "Conflicting edit", error, form)
             except (OSError, ValueError, RuntimeError) as error:
-                self._send(400, _layout("Could not save review", f"<p>{html.escape(str(error))}</p>"))
+                self._form_error(400, "Could not save review", error, form)
+
+        def _form_error(self, status, title, error, form):
+            retained = "".join(
+                f"<p>{label} (not saved):</p><textarea readonly>{html.escape(form[name][0])}</textarea>"
+                for name, label in (("code", "Draft code"), ("adaptation_note", "Source note"),
+                                    ("comment", "Review comment"), ("comment_author", "Reviewer name"))
+                if form.get(name, [""])[0]
+            )
+            self._send(status, _layout(title, f"<p>{html.escape(str(error))}</p>"
+                "<p>Copy any submitted text below before returning to the editor or reloading.</p>"
+                + retained))
 
         def _redirect(self, location: str):
             self.send_response(303)

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .agda_manifest import source_digest
-from .editing import EditConflict, EditPreview, apply_edit, preview_edit
+from .editing import EditConflict, EditPreview, preview_edit
 from .maintained import destination_path, dependency_digest, replace_block
 
 
@@ -109,18 +109,8 @@ def apply_agda_block_edit(
     adaptation_note: str,
     expected_manifest_digest: str,
 ) -> tuple[Path, Path]:
-    """Patch only the selected fence, preserving all other maintained content."""
-
-    edit = preview_agda_block_edit(root, block_id, code, adaptation_note)
-    if edit.evidence_digest != expected_manifest_digest:
-        raise EditConflict("The manifest, Rosetta file, or dependencies changed after preview; reload and try again.")
-    backup = apply_edit(edit.document_preview, root)
-    try:
-        apply_edit(edit.preview, root)
-    except BaseException:
-        # Restore only our own write; never replace a subsequent collaborator edit.
-        current = edit.document_preview.path.read_text()
-        if current == edit.document_preview.new_text:
-            apply_edit(preview_edit(edit.document_preview.path, backup.read_text(), original=current), root)
-        raise
-    return backup, edit.document_preview.path
+    """Reject legacy callers: review must never replace a maintained file."""
+    raise ValueError(
+        "Review is read-only for Rosetta files. Apply the proposed change in your "
+        "editor and typecheck the maintained file; automatic promotion is disabled."
+    )

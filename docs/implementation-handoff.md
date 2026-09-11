@@ -32,9 +32,14 @@ part of the swap-Π signature, with its proof body unchanged.
 - Review reads maintained code and recognizes direct contributions without
   provenance records. Missing markers never cause stale manifest code to be
   presented as current code.
-- Curated review promotion patches only the selected fence, with file and
-  provenance diffs, recoverable backups, and conflict checks. Draft checks
-  overlay the maintained file, not reconstructed content.
+- Review is read-only for Rosetta files and manifests. Automatic promotion is
+  disabled, including old confirmation forms and the legacy apply function.
+  Passing drafts show suggested diffs for application in the collaborator's
+  editor. Draft checks overlay maintained content, not reconstructed content.
+- Metadata updates use one locked read-modify-write transaction across threads
+  and processes. Draft revision checks reject stale saves/discards and prevent
+  a finishing typecheck from restoring an older draft. Restart running review
+  servers after updating; they retain old code until restarted.
 - Typechecks use actual files and local imports. Cached review evidence tracks
   transitive dependencies. Agda's ignored interface caches are enabled.
 - Ordinary checks do not load review metadata. CI checks file preservation
@@ -60,6 +65,16 @@ https://github.com/daniel-carranza/HoTT-Rosetta/actions/runs/34631141699
 This run validates backend commit 01e13b5. Locally, starting the HTTP server
 works, but connecting to 127.0.0.1 is denied, including one elevated retry.
 Do not work around that restriction; CI supplies the external smoke-test result.
+
+The subsequent concurrency hardening has regression coverage for simultaneous
+comments, cross-process first creation, stale tabs, superseded typechecks, and
+rejection of old write endpoints. Handler tests exercise POST requests without
+network access. No Rosetta or Agda changes are part of this hardening; manifest
+helper scripts remain unchanged as requested. The earlier CI result above is
+historical validation, not a claim about these subsequent changes.
+For the hardening, all 212 non-network tests pass locally, along with repository
+and whitespace checks. The full 213-test suite still encounters the known local
+loopback restriction; do not treat that environment error as a passing test.
 
 The reconciled public snapshot is commit 76cb07a. Release 86105c4 records the
 accepted public ancestry without changing that snapshot's tree. Both release

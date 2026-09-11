@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from .agda_manifest import AgdaBlock, load_manifest
-from .editing import apply_edit, preview_edit
+from .editing import update_json_store
 from .agda_typecheck import typecheck_result
 from .missing_agda import discover_missing_agda
 from .layout import rosetta_directory
@@ -311,21 +311,20 @@ def update_agda_review(
             "as needing further review"
         )
     path = root / "data" / "agda-reviews.json"
-    if not path.exists():
-        path.write_text(json.dumps(_empty_store(), indent=2) + "\n")
-    store = load_agda_review_store(path)
-    saved = store["blocks"].setdefault(block_id, {})
-    saved["review_sha256"] = _review_digest(current)
-    if state is not None:
-        saved["state"] = state
-    else:
-        saved.setdefault("state", current.state if current.state != "stale" else "pending")
-    comments = saved.setdefault("comments", [])
-    if comment is not None:
-        cleaned = comment.strip()
-        if not cleaned:
-            raise ValueError("Review comments cannot be empty")
-        comments.append({"author": comment_author.strip() or "Reviewer", "text": cleaned})
-    new_text = json.dumps(store, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
-    apply_edit(preview_edit(path, new_text), root)
+
+    def update(store):
+        saved = store["blocks"].setdefault(block_id, {})
+        saved["review_sha256"] = _review_digest(current)
+        if state is not None:
+            saved["state"] = state
+        else:
+            saved.setdefault("state", current.state if current.state != "stale" else "pending")
+        comments = saved.setdefault("comments", [])
+        if comment is not None:
+            cleaned = comment.strip()
+            if not cleaned:
+                raise ValueError("Review comments cannot be empty")
+            comments.append({"author": comment_author.strip() or "Reviewer", "text": cleaned})
+
+    update_json_store(path, root, "blocks", update)
     return path

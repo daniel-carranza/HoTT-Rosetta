@@ -9,7 +9,7 @@ class EditingTests(unittest.TestCase):
     def test_edit_is_atomic_and_backed_up(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            path = root / "data" / "example.lagda.md"
+            path = root / "data" / "agda-reviews.json"
             path.parent.mkdir()
             path.write_text("old\n")
             preview = preview_edit(path, "new\n")
@@ -22,7 +22,8 @@ class EditingTests(unittest.TestCase):
     def test_concurrent_change_is_not_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            path = root / "example.lagda.md"
+            path = root / "data" / "agda-reviews.json"
+            path.parent.mkdir()
             path.write_text("first\n")
             preview = preview_edit(path, "proposed\n")
             path.write_text("another reviewer changed this\n")

@@ -10,6 +10,7 @@ from .agda_manifest import load_manifest
 from .generate import typecheck_candidate
 from .layout import rosetta_directory
 from .maintained import destination_path, dependency_digest, replace_block
+from .editing import update_json_store
 
 
 def _store_path(root: Path) -> Path:
@@ -135,9 +136,8 @@ def run_typecheck(root: Path, destination: str, force: bool = False) -> dict:
         "sha256": digest,
         "candidate": str(staged.relative_to(root)),
     }
-    store = load_typechecks(root)
-    store["destinations"][destination] = result
-    path = _store_path(root)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(store, indent=2, ensure_ascii=False, sort_keys=True) + "\n")
+    def update(store):
+        store["destinations"][destination] = result
+
+    update_json_store(_store_path(root), root, "destinations", update)
     return result

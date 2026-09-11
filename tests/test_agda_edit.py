@@ -6,7 +6,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 from rosetta.agda_edit import apply_agda_block_edit, preview_agda_block_edit
-from rosetta.editing import EditConflict
 
 
 class AgdaEditTests(unittest.TestCase):
@@ -65,7 +64,7 @@ class AgdaEditTests(unittest.TestCase):
             self.assertIn('"provenance_kind": "adapted"', edit.preview.diff)
             self.assertIn("Adjusted for local names.", edit.preview.diff)
 
-    def test_confirmed_edit_preserves_surrounding_manual_content(self):
+    def test_legacy_apply_is_disabled_and_cannot_write_content_or_manifest(self):
         with tempfile.TemporaryDirectory() as directory:
             root, shard = self._root(directory)
             edit = preview_agda_block_edit(
@@ -73,17 +72,17 @@ class AgdaEditTests(unittest.TestCase):
             )
             generated = root / "product" / "section-1-1-example.lagda.md"
             original = generated.read_text()
-            backup, destination = apply_agda_block_edit(
-                root, "example-block", "changed", "Adjusted for local names.",
-                edit.evidence_digest,
-            )
-            self.assertTrue(backup.is_file())
-            self.assertEqual(destination, generated)
-            self.assertEqual(backup.read_text(), original)
-            self.assertEqual(generated.read_text(), original.replace("original : Set\noriginal = Set", "changed"))
-            saved = json.loads(shard.read_text())["blocks"][0]
-            self.assertEqual(saved["code"], "changed")
-            self.assertEqual(saved["provenance_kind"], "adapted")
+            manifest = shard.read_bytes()
+            with self.assertRaisesRegex(ValueError, "read-only"):
+                apply_agda_block_edit(
+                    root, "example-block", "changed", "Adjusted for local names.",
+                    edit.evidence_digest,
+                )
+            self.assertEqual(generated.read_text(), original)
+            self.assertEqual(shard.read_bytes(), manifest)
+            self.assertFalse((root / ".rosetta-backups").exists())
+            self.assertIn("+changed", edit.document_preview.diff)
+            self.assertEqual(edit.document_preview.new_text, original.replace("original : Set\noriginal = Set", "changed"))
 
     def test_confirmation_rejects_manifest_changed_after_preview(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -92,7 +91,7 @@ class AgdaEditTests(unittest.TestCase):
                 root, "example-block", "changed", "Adjusted for local names."
             )
             shard.write_text(shard.read_text() + "\n")
-            with self.assertRaises(EditConflict):
+            with self.assertRaisesRegex(ValueError, "read-only"):
                 apply_agda_block_edit(
                     root,
                     "example-block",

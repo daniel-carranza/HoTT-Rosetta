@@ -5,11 +5,12 @@ import json
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Optional
+from uuid import uuid4
 
 from .agda_edit import _find_block
 from .agda_manifest import load_manifest
 from .agda_typecheck import candidate_for_destination
-from .editing import apply_edit, preview_edit
+from .editing import EditConflict, update_json_store
 from .generate import typecheck_candidate
 from .maintained import dependency_digest, destination_path
 
@@ -24,23 +25,19 @@ class AgdaScratchpad:
     status: str = "not-checked"
     message: str = ""
     checked_sha256: str = ""
+    revision: str = ""
 
 
 def _path(root: Path) -> Path:
     return root / "_build" / "rosetta-review" / "agda-scratchpads.json"
 
 
-def _ensure_store(root: Path) -> Path:
-    path = _path(root)
-    if not path.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text('{\n  "version": 1,\n  "drafts": {}\n}\n')
-    return path
-
-
 def _load(root: Path) -> dict:
-    path = _ensure_store(root)
-    value = json.loads(path.read_text())
+    path = _path(root)
+    try:
+        value = json.loads(path.read_text())
+    except FileNotFoundError:
+        return {"version": 1, "drafts": {}}
     if value.get("version") != 1 or not isinstance(value.get("drafts"), dict):
         raise ValueError(f"Invalid Agda scratchpad data: {path}")
     return value
@@ -55,20 +52,37 @@ def _code_digest(code: str) -> str:
     return hashlib.sha256(code.encode()).hexdigest()
 
 
-def _save(root: Path, draft: Optional[AgdaScratchpad], block_id: str) -> Path:
-    path = _ensure_store(root)
-    store = _load(root)
+def draft_revision(draft: Optional[AgdaScratchpad]) -> str:
     if draft is None:
-        store["drafts"].pop(block_id, None)
-    else:
-        store["drafts"][block_id] = asdict(draft)
-    text = json.dumps(store, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
-    return apply_edit(preview_edit(path, text), root)
+        return "missing"
+    # Existing drafts remain usable without rewriting the store on read.
+    return draft.revision or _code_digest(json.dumps(asdict(draft), sort_keys=True))
+
+
+def _expect_revision(draft, expected):
+    if draft_revision(draft) != expected:
+        raise EditConflict("The scratchpad changed in another tab or request; keep your text and reload before retrying")
+
+
+def _save(root: Path, draft: Optional[AgdaScratchpad], block_id: str, expected_revision: str):
+    saved = replace(draft, revision=uuid4().hex) if draft is not None else None
+
+    def update(store):
+        value = store["drafts"].get(block_id)
+        _expect_revision(AgdaScratchpad(**value) if value else None, expected_revision)
+        if saved is None:
+            store["drafts"].pop(block_id, None)
+        else:
+            store["drafts"][block_id] = asdict(saved)
+
+    update_json_store(_path(root), root, "drafts", update)
+    return saved
 
 
 def save_scratchpad(
     root: Path, block_id: str, code: str, adaptation_note: str = "",
     expected_document_digest: str = "",
+    expected_draft_revision: str = "missing",
 ) -> AgdaScratchpad:
     cleaned = code.rstrip("\n")
     if not cleaned.strip():
@@ -79,6 +93,7 @@ def save_scratchpad(
     if expected_document_digest and hashlib.sha256(destination_path(root, block["destination"]).read_bytes()).hexdigest() != expected_document_digest:
         raise ValueError("The Rosetta file changed after the editor was opened; reload it")
     previous = load_scratchpad(root, block_id)
+    _expect_revision(previous, expected_draft_revision)
     if previous and (previous.base_content_digest != content_digest or previous.base_manifest_digest != base_digest):
         raise ValueError("The file or dependencies changed; discard the stale draft and reload")
     draft = AgdaScratchpad(
@@ -88,19 +103,20 @@ def save_scratchpad(
         base_manifest_digest=base_digest,
         base_content_digest=content_digest,
     )
-    _save(root, draft, block_id)
-    return draft
+    return _save(root, draft, block_id, expected_draft_revision)
 
 
-def discard_scratchpad(root: Path, block_id: str) -> None:
+def discard_scratchpad(root: Path, block_id: str, expected_draft_revision: str = "missing") -> None:
     _find_block(root, block_id)
-    _save(root, None, block_id)
+    _save(root, None, block_id, expected_draft_revision)
 
 
-def run_scratchpad_typecheck(root: Path, block_id: str) -> AgdaScratchpad:
+def run_scratchpad_typecheck(root: Path, block_id: str, expected_draft_revision: Optional[str] = None) -> AgdaScratchpad:
     draft = load_scratchpad(root, block_id)
     if draft is None:
         raise ValueError("No scratchpad draft has been saved")
+    if expected_draft_revision is not None:
+        _expect_revision(draft, expected_draft_revision)
     blocks = load_manifest(root / "data" / "agda-blocks.json")
     matches = [block for block in blocks if block.block_id == block_id]
     if len(matches) != 1:
@@ -128,16 +144,20 @@ def run_scratchpad_typecheck(root: Path, block_id: str) -> AgdaScratchpad:
         message=output.strip(),
         checked_sha256=_code_digest(draft.code),
     )
-    _save(root, checked, block_id)
-    return checked
+    if dependency_digest(root, block.destination) != draft.base_content_digest:
+        raise EditConflict("The Rosetta file or dependencies changed during the check; no result was saved")
+    return _save(root, checked, block_id, draft_revision(draft))
 
 
-def promotion_scratchpad(root: Path, block_id: str) -> AgdaScratchpad:
+def promotion_scratchpad(root: Path, block_id: str, expected_draft_revision: Optional[str] = None) -> AgdaScratchpad:
+    """Validate a passing draft for a read-only suggested diff, never apply it."""
     draft = load_scratchpad(root, block_id)
     if draft is None:
         raise ValueError("No scratchpad draft has been saved")
+    if expected_draft_revision is not None:
+        _expect_revision(draft, expected_draft_revision)
     if draft.status != "passed" or draft.checked_sha256 != _code_digest(draft.code):
-        raise ValueError("The current scratchpad draft must pass Agda before promotion")
+        raise ValueError("The current scratchpad draft must pass Agda before showing a suggested diff")
     manifest_path, _, block = _find_block(root, block_id)
     current = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
     if current != draft.base_manifest_digest:
